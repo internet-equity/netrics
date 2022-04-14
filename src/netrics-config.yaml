@@ -1,0 +1,7 @@
+---
+ping:
+  destinations:
+    - google.com
+  num_pings: 5
+  periodicity: "*/5 * * * *"
+
