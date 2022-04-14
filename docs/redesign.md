@@ -29,26 +29,26 @@ In this section, we outline the desired functionalities of *netrics*.
 
 ### Job Control
 
-**Job Scheduling**
+1. Job Scheduling
 - Periodicity: How often is the module run?
 - Prioritization: Does this module need to run alone? Can it be run in the
   background?
-
-**Error Handling**
+2. Error Handling
 
 ### Module Testing
 
-- How do we test new modules?
+1. Integration testing: Does the module fit in the framework (inputs/outputs)
+2. Modules testing
+
+### Passive Measurement
+
+1. Data consumption: counting total data transfer (for folks w/ data caps)
 
 ### Data Collection
 
-**Data Format**
-- What is the standard data format that the module will output? Probably JSON.
-
-**Data Ingestion**
-- How does the data get collection?
+1. Data Format: what is the standard data format that the module will output? Probably JSON.
+2. Data Ingestion: how does the data get collection?
 
 
-### Package Management
-
-- How do users install/upgrade modules?
+### Module Management
+1. Module Install/Upgrade
