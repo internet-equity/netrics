@@ -1,0 +1,7 @@
+{
+  "targets": [
+	"netflix.com",
+    "google.com",
+    "nytimes.com"
+  ]
+}

@@ -12,14 +12,14 @@ def exec(cmd):
     try:
         out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as exec_err:
-        raise RuntimeError(exec_err)
+        return exec_err.returncode, exec_err.output.decode('utf-8')
 
-    return out.decode('utf-8')
+    return None, out.decode('utf-8')
 
 def main():
 
     # Read config from stdin
-    params = {"targets": ['google.com', 'facebook.com', 'nytimes.com']}
+    params = json.load(sys.stdin)
 
     res = {}
 
@@ -27,10 +27,15 @@ def main():
         res[dst] = {}
         ping_cmd = "ping -i {:.2f} -c {:d} -w {:d} {:s} -q".format(
                 0.25, 10, 5, dst)
-        try:
-            output = exec(ping_cmd)
-        except RuntimeError as ping_err:
-            raise RuntimeError(ping_err)
+
+        err, output = exec(ping_cmd)
+        if err:
+            res[dst]['err'] = True
+            res[dst]['err_output'] = output
+            res[dst]['err_returncode'] = err
+            continue
+
+        res[dst]['err'] = False
 
         # Extracting packet loss from the output
         res[dst]['pkt_loss'] = float(re.findall(', ([0-9.]*)% packet loss',
@@ -48,7 +53,8 @@ def main():
         res[dst]['rtt_max'] = rtt_stats[2]
         res[dst]['rtt_stddev'] = rtt_stats[3]
 
-        json.dump(res, sys.stdout)
+    json.dump(res, sys.stdout)
+    print(params)
 
 
 if __name__ == '__main__':
