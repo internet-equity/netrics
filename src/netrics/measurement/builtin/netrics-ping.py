@@ -1,30 +1,12 @@
-import json
 import subprocess as sp
+import json
 import re
 import sys
 import time
 
-def exec(cmd):
+def stderr_parser(exit_code, err_msg):
     """
-    Run ping on command line
-
-    """
-    
-    pipe = sp.Popen(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-
-   # Wait for process to finish to collect exit code 
-    while pipe.poll() is None:
-        time.sleep(0.1)
-
-    stdout = pipe.stdout.read().decode('utf-8')
-    stderr = pipe.stderr.read().decode('utf-8')
-    exit_code = pipe.returncode
-
-    return exit_code, stdout, stderr
-
-def error_handler(exit_code, err_msg):
-    """
-    Returns error message and error code
+    Parses error message and error code
 
     """
     res = {}
@@ -34,19 +16,14 @@ def error_handler(exit_code, err_msg):
         res['msg'] = "Transmission successful"
     if exit_code == 1:
         res['msg'] = "Transmission successful, some packet loss"
-    else:
-        res['msg'] = err_msg
 
     return res
 
-def parse_ping_output(exit_code, ping_res):
+def stdout_parser(exit_code, ping_res):
     """
     Parses ping output and returns dict with results
 
     """
-
-    if exit_code == 2:
-        return None
 
     stats = {}
     # Extract packet loss stats from output
@@ -75,24 +52,40 @@ def main():
     # Read config from stdin
     params = json.load(sys.stdin)
 
-    res = {}
+    stdout_res = {}
+    stderr_res = {}
 
     for dst in params['targets']:
-        res[dst] = {}
-        ping_cmd = "ping -i {:.2f} -c {:d} -w {:d} {:s} -q".format(
-                0.25, 10, 5, dst)
+        stdout_res[dst] = {}
+        stderr_res[dst] = {}
+        cmd = ['ping', '-i', '0.25', '-c', '10', '-w', '5', dst]
 
-        # Execute ping command
-        exit_code, stdout, stderr = exec(ping_cmd)
+        try:
+            ping_res = sp.run(cmd, capture_output=True, check=True)
+        except sp.CalledProcessError as err:
+            # Check for client-side error
+            if err.returncode == 2:
+                print("command 'ping' failed with exit code 2 and stderr <",
+                        err.stderr, ">", file=sys.stderr)
+          
+                sys.exit(err.returncode)
+            else:
+                ping_res = err
+
+        output = ping_res.stdout.decode('utf-8')
+        error_msg = ping_res.stderr.decode('utf-8')
 
         # Handle error message
-        res[dst]['err'] = error_handler(exit_code, stderr)
+        stderr_res[dst] = stderr_parser(ping_res.returncode, error_msg)
 
         # Extract results from ping output
-        res[dst]['results'] = parse_ping_output(exit_code, stdout)
+        stdout_res[dst] = stdout_parser(ping_res.returncode, output)
 
-    json.dump(res, sys.stdout)
-    print(params)
+    # Communicate results and errors
+    json.dump(stdout_res, sys.stdout)
+    json.dump(stderr_res, sys.stderr)
+
+    sys.exit(0)
 
 
 if __name__ == '__main__':
