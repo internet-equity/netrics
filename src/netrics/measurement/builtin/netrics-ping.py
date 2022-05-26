@@ -4,7 +4,9 @@ import re
 import sys
 import time
 
-def stderr_parser(exit_code, err_msg):
+PARAM_DEFAULTS = {"targets": ["google.com", "facebook.com", "nytimes.com"]}
+
+def stderr_parser(exit_code):
     """
     Parses error message and error code
 
@@ -19,7 +21,7 @@ def stderr_parser(exit_code, err_msg):
 
     return res
 
-def stdout_parser(exit_code, ping_res):
+def stdout_parser(ping_res):
     """
     Parses ping output and returns dict with results
 
@@ -49,8 +51,8 @@ def stdout_parser(exit_code, ping_res):
 
 def main():
 
-    # Read config from stdin
-    params = json.load(sys.stdin)
+    # Read config from stdin, use default params otherwise
+    params = dict(PARAM_DEFAULTS, **json.load(sys.stdin))
 
     stdout_res = {}
     stderr_res = {}
@@ -65,9 +67,9 @@ def main():
         except sp.CalledProcessError as err:
             # Check for client-side error
             if err.returncode == 2:
-                print("command 'ping' failed with exit code 2 and stderr <",
-                        err.stderr, ">", file=sys.stderr)
-          
+                stderr_res[dst] = {"exit_code": err.returncode, "msg":
+                        err.stderr}
+                json.dump(stderr_res, sys.stderr)
                 sys.exit(err.returncode)
             else:
                 ping_res = err
@@ -76,10 +78,10 @@ def main():
         error_msg = ping_res.stderr.decode('utf-8')
 
         # Handle error message
-        stderr_res[dst] = stderr_parser(ping_res.returncode, error_msg)
+        stderr_res[dst] = stderr_parser(ping_res.returncode)
 
         # Extract results from ping output
-        stdout_res[dst] = stdout_parser(ping_res.returncode, output)
+        stdout_res[dst] = stdout_parser(output)
 
     # Communicate results and errors
     json.dump(stdout_res, sys.stdout)
