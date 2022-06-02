@@ -1,6 +1,6 @@
 import argcmdr
 
-import netrics.cli
+import netrics.cli.command
 
 
 class Netrics(argcmdr.RootCommand):
@@ -20,8 +20,8 @@ class Netrics(argcmdr.RootCommand):
 def main():
     # auto-discover nested commands
     argcmdr.init_package(
-        netrics.cli.__path__,
-        netrics.cli.__name__,
+        netrics.cli.command.__path__,
+        netrics.cli.command.__name__,
     )
 
     argcmdr.main(Netrics)

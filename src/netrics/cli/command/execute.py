@@ -1,8 +1,6 @@
 from argparse import REMAINDER
 
-from . import Netrics
-
-from .base import runcmd
+from .. import Netrics, runcmd
 
 
 @Netrics.register
