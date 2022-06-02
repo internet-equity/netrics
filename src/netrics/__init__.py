@@ -1,1 +1,1 @@
-from .interface import main
+from .cli import main
