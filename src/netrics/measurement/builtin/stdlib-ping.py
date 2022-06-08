@@ -49,11 +49,13 @@ def stderr_parser(exit_code):
     """
     res = {}
 
-    res['exit_code'] = exit_code
+    res['exit_code'] = int(exit_code)
     if exit_code == SUCCESS:
-        res['msg'] = "Transmission successful"
+        res['msg'] = "Success"
     if exit_code == NO_REPLY:
         res['msg'] = "Transmission successful, some packet loss"
+    if exit_code == LAN_ERROR:
+        res['msg'] = "Local network error"
 
     return res
 
@@ -88,9 +90,11 @@ def stdout_parser(res):
 
 
 def main():
-    # Dict for outputs
+ 
+    # Return structs
     stdout_res = {}
     stderr_res = {}
+    exit_code = SUCCESS
 
     # Parse stdin
     params, err = stdin_parser()
@@ -102,36 +106,33 @@ def main():
         sys.exit(err)
 
     # Execute ping
+    procs = []
     for dst in params['targets']:
         stdout_res[dst] = {}
         stderr_res[dst] = {}
         cmd = ['ping', '-i', params['interval'],
                '-c', params['count'], '-w', params['timeout'], dst]
 
-        try:
-            ping_res = sp.run(cmd, capture_output=True, check=True)
-        except sp.CalledProcessError as err:
-            # Check for client-side error
-            if err.returncode == LAN_ERROR:
-                stderr_res[dst] = {"exit_code": err.returncode,
-                                   "msg": err.stderr}
-                json.dump(stderr_res, sys.stderr)
-                sys.exit(err.returncode)
-            else:
-                ping_res = err
+        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+        procs.append((dst, p))
 
-        output = ping_res.stdout.decode('utf-8')
+    # Process results
+    for (dst, p) in procs:
+        p.wait()
+
+        # Ping stdout
+        output = p.stdout.read().decode('utf-8')
+        stdout_res[dst] = stdout_parser(output)   
 
         # Handle error message
-        stderr_res[dst] = stderr_parser(ping_res.returncode)
-
-        # Extract results from ping output
-        stdout_res[dst] = stdout_parser(output)
+        if p.returncode == LAN_ERROR:
+            exit_code = LAN_ERROR
+        stderr_res[dst] = stderr_parser(p.returncode)
 
     # Communicate results and errors
     json.dump(stdout_res, sys.stdout)
     json.dump(stderr_res, sys.stderr)
-    sys.exit(SUCCESS)
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':

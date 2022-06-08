@@ -2,6 +2,10 @@
   "targets": [
     "google.com",
     "netflix.com",
-    "nytimes.com"
+    "nytimes.com",
+	"facebook.com",
+	"reddit.com",
+	"github.com",
+	"linkedin.com"
   ]
 }
