@@ -15,7 +15,8 @@ LAN_ERROR = 2
 PARAM_DEFAULTS = {"targets": ["google.com", "facebook.com", "nytimes.com"],
                   "interval": 0.25,
                   "count": 10,
-                  "timeout": 5}
+                  "timeout": 5,
+                  "verbose": False}
 
 
 def stdin_parser():
@@ -42,22 +43,28 @@ def stdin_parser():
 
     return params, err
 
-def stderr_parser(exit_code):
+
+def stderr_parser(exit_code, verbose, stderr):
     """
     Parses error message and error code
 
     """
-    res = {}
 
-    res['exit_code'] = int(exit_code)
-    if exit_code == SUCCESS:
-        res['msg'] = "Success"
-    if exit_code == NO_REPLY:
-        res['msg'] = "Transmission successful, some packet loss"
-    if exit_code == LAN_ERROR:
-        res['msg'] = "Local network error"
+    if exit_code == SUCCESS and verbose:
+        return {'retcode': exit_code, 'message': "Success"}
 
-    return res
+    elif exit_code == NO_REPLY and verbose:
+        return {'retcode': exit_code,
+                'message': "Transmission successful, some packet loss"}
+
+    elif exit_code == LAN_ERROR:
+        return {'retcode': exit_code, "message": "Local network error"}
+
+    elif exit_code > 0:
+        return {'retcode': exit_code, 'message': stderr}
+
+    else:
+        return None
 
 
 def stdout_parser(res):
@@ -90,11 +97,12 @@ def stdout_parser(res):
 
 
 def main():
- 
+
     # Return structs
     stdout_res = {}
     stderr_res = {}
-    exit_code = SUCCESS
+    exit_code = LAN_ERROR
+    err = False
 
     # Parse stdin
     params, err = stdin_parser()
@@ -108,32 +116,34 @@ def main():
     # Execute ping
     procs = []
     for dst in params['targets']:
-        stdout_res[dst] = {}
-        stderr_res[dst] = {}
         cmd = ['ping', '-i', params['interval'],
                '-c', params['count'], '-w', params['timeout'], dst]
 
-        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, text=True)
         procs.append((dst, p))
 
     # Process results
     for (dst, p) in procs:
         p.wait()
 
-        # Ping stdout
-        output = p.stdout.read().decode('utf-8')
-        stdout_res[dst] = stdout_parser(output)   
-
-        # Handle error message
+        # Parse ping exit code
+        stderr_res[dst] = stderr_parser(p.returncode, params['verbose'],
+                                        p.stderr.read())
         if p.returncode == LAN_ERROR:
-            exit_code = LAN_ERROR
-        stderr_res[dst] = stderr_parser(p.returncode)
+            err = True
+            continue
+        exit_code = SUCCESS
+
+        # Ping stdout
+        output = p.stdout.read()
+        stdout_res[dst] = stdout_parser(output)
 
     # Communicate results and errors
-    json.dump(stdout_res, sys.stdout)
-    json.dump(stderr_res, sys.stderr)
+    if exit_code == SUCCESS:
+        json.dump(stdout_res, sys.stdout)
+    if err:
+        json.dump(stderr_res, sys.stderr)
     sys.exit(exit_code)
-
 
 if __name__ == '__main__':
     main()
