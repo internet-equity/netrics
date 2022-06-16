@@ -48,14 +48,19 @@ def stderr_parser(exit_code, verbose, stderr):
     """
     Parses error message and error code
 
+    Attributes:
+        exit_code: The return code from the ping command.
+        verbose: Module parameter to indicate verbose output.
+        stderr: Stderr returned by ping.
     """
 
-    if exit_code == SUCCESS and verbose:
-        return {'retcode': exit_code, 'message': "Success"}
 
-    elif exit_code == NO_REPLY and verbose:
+    if exit_code == SUCCESS:
+        return {'retcode': exit_code, 'message': "Success"} if verbose else None
+
+    elif exit_code == NO_REPLY:
         return {'retcode': exit_code,
-                'message': "Transmission successful, some packet loss"}
+                'message': "Transmission successful, some packet loss"} if verbose else None
 
     elif exit_code == LAN_ERROR:
         return {'retcode': exit_code, "message": "Local network error"}
@@ -98,11 +103,10 @@ def stdout_parser(res):
 
 def main():
 
-    # Return structs
+    # Initializing module contract structures
     stdout_res = {}
     stderr_res = {}
-    exit_code = LAN_ERROR
-    err = False
+    exit_code_dst = SUCCESS
 
     # Parse stdin
     params, err = stdin_parser()
@@ -126,22 +130,26 @@ def main():
     for (dst, p) in procs:
         p.wait()
 
-        # Parse ping exit code
-        stderr_res[dst] = stderr_parser(p.returncode, params['verbose'],
-                                        p.stderr.read())
-        if p.returncode == LAN_ERROR:
-            err = True
-            continue
-        exit_code = SUCCESS
+        # Parse ping exit code and write to output if message or error
+        if stderr_dst := stderr_parser(p.returncode, params['verbose'],
+                                        p.stderr.read()):
+            stderr_res[dst] = stderr_dst
 
-        # Ping stdout
+        exit_code_dst = max(exit_code_dst, p.returncode)
+
+        # If LAN error, don't write stdout 
+        if p.returncode > NO_REPLY:
+            continue
+
         output = p.stdout.read()
         stdout_res[dst] = stdout_parser(output)
 
+
+    exit_code = exit_code_dst if exit_code_dst > 1 else 0
     # Communicate results and errors
     if exit_code == SUCCESS:
         json.dump(stdout_res, sys.stdout)
-    if err:
+    if stderr_res:
         json.dump(stderr_res, sys.stderr)
     sys.exit(exit_code)
 
