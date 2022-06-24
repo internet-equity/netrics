@@ -1,6 +1,7 @@
 import subprocess as sp
 import json
 import sys
+import ipaddress
 
 # Global error codes
 CONFIG_ERROR = 20
@@ -16,7 +17,7 @@ INTERNAL_ERROR = 10
 SCAMPER_CONFIG_ERROR = 255
 
 # Default input parameters
-PARAM_DEFAULTS = {'targets': ['1.1.1.1'],
+PARAM_DEFAULTS = {"targets": ["1.1.1.1"],
                   "attempts": 3,
                   "timeout": 5,
                   "verbose": False}
@@ -52,6 +53,8 @@ def parse_trace_stdout(out):
     for dst in out: 
         try:
             dst_res = json.loads(dst)
+            if dst_res['type'] != "trace":
+                continue
         except json.decoder.JSONDecodeError:
             continue
         trace_res = {}
@@ -116,13 +119,11 @@ def get_ip(hostname):
         return err.returncode, err.stderr
 
     ipaddr = res.stdout.decode('utf-8').split('\n')[0]
+    print(ipaddr)
     return res.returncode, ipaddr
 
 def main():
-
-    # Read config from stdin
-    params = dict(PARAM_DEFAULTS, **json.load(sys.stdin))
-
+    # Initialize stored structs
     stdout_res = {}
     stderr_res = {}
     exit_code = SUCCESS
@@ -141,21 +142,22 @@ def main():
         stderr_res['dig'] = {}
 
         # Picks first IP addr returned by DNS lookup
-        recode, out = get_ip(dst)
-        if stderr_dst := parse_dig_stderr(recode, params['verbose'], out):
-            stderr_res['dig'][dst] = stderr_dst
+        try:
+            ip = ipaddress.ip_address(dst)
+        except ValueError:
+            recode, dst = get_ip(dst)
+            if stderr_dst := parse_dig_stderr(recode, params['verbose'], dst):
+                stderr_res['dig'][dst] = stderr_dst
 
-        if recode > SUCCESS:
-            continue
-        ips.append(out)
+            if recode > SUCCESS:
+                continue
+        ips.append(dst)
 
-    trace_cmd = f"""
-        scamper -O json -i {" ".join(str(x) for x in ips)} -I
-        "trace -P icmp-paris -q {params["attempts"]} 
-        -w {params['timeout']} -Q"
-    """
+    ip_list = " ".join(str(x) for x in ips)
+
+    trace_cmd = f'scamper -O json -i {ip_list} -c "trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q"'
     try:
-        res = sp.run(trace_cmd, capture_output=True, check=True)
+        res = sp.run(trace_cmd, capture_output=True, check=True, shell=True)
     except sp.CalledProcessError as err:
         stderr_res['trace']['error'] = err.stderr
         exit_code = err.returncode
