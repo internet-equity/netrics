@@ -1,6 +1,1 @@
-{
-  "targets": [
-    "google.com",
-	"facebook.com"
-  ]
-}
+{"targets": ["1.1.1.1","8.8.8.8"]}
