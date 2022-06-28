@@ -2,9 +2,11 @@ import subprocess as sp
 import json
 import sys
 import ipaddress
+from shutil import which
 
 # Global error codes
 CONFIG_ERROR = 20
+BIN_ERROR = 21
 
 # Dig error codes
 SUCCESS = 0
@@ -22,6 +24,16 @@ PARAM_DEFAULTS = {"targets": ["1.1.1.1"],
                   "timeout": 5,
                   "verbose": False}
 
+SCAMPER_BIN = "scamper"
+
+def is_executable(name):
+    """
+    Checks whether `name` is on PATH and marked as executable
+    """
+    if which(name) is None:
+        return BIN_ERROR
+    return SUCCESS
+
 def stdin_parser():
     """
     Verifies the type of the input parameters
@@ -33,7 +45,7 @@ def stdin_parser():
 
     # Read config from stdin and fill in omitted params with default
     params = dict(PARAM_DEFAULTS, **json.load(sys.stdin))
-    exit_code = None
+    exit_code = SUCCESS
 
     # Check type of paramters
     try:
@@ -50,7 +62,7 @@ def parse_trace_stdout(out):
     """
     res = {}
 
-    for dst in out: 
+    for dst in out:
         try:
             dst_res = json.loads(dst)
             if dst_res['type'] != "trace":
@@ -61,19 +73,16 @@ def parse_trace_stdout(out):
         trace_res['src'] = dst_res['src']
         trace_res['dst'] = dst_res['dst']
         trace_res['hop_count'] = dst_res['hop_count']
-        trace_res['probe_count'] = dst_res['probe_count']
+        trace_res['probe_count'] = len(dst_res['hops'])
         trace_res['attempts'] = dst_res['attempts']
-        trace_res['hops'] = {}
+        trace_res['hops'] = []
 
         for i in range(trace_res['probe_count']):
-           hop = dst_res['hops'][i]
-           resp = {'addr': hop['addr'], 'probe_id': hop['probe_id'], 
-                   'rtt': hop['rtt']}
-           if hop['probe_ttl'] in trace_res['hops']:
-               trace_res['hops'][hop['probe_ttl']].append(resp)
-           else:
-               trace_res['hops'][hop['probe_ttl']] = [resp]
-        res[dst_res['dst']] = trace_res
+            hop = dst_res['hops'][i]
+            resp = {'addr': hop['addr'], 'probe_id': hop['probe_id'], 
+                    'rtt': hop['rtt'], 'ttl_id': hop['probe_ttl']}
+            trace_res['hops'].append(resp)
+        res[trace_res['dst']] = trace_res
 
     return res
 
@@ -119,7 +128,6 @@ def get_ip(hostname):
         return err.returncode, err.stderr
 
     ipaddr = res.stdout.decode('utf-8').split('\n')[0]
-    print(ipaddr)
     return res.returncode, ipaddr
 
 def main():
@@ -128,9 +136,17 @@ def main():
     stderr_res = {}
     exit_code = SUCCESS
 
+    # Check that scamper is available
+    exit_code = is_executable(SCAMPER_BIN)
+    if exit_code != SUCCESS:
+        stderr_res['bin'] = {'retcode': exit_code,
+                'message': "Scamper either not on PATH or not executable"}
+        json.dump(stderr_res, sys.stderr)
+        sys.exit(exit_code)
+
     # Parse stdin
     params, exit_code = stdin_parser()
-    if exit_code:
+    if exit_code != SUCCESS:
         stderr_res['stdin'] = {'retcode': exit_code,
                                "message": "Config param  type error"}
         json.dump(stderr_res, sys.stderr)
@@ -139,14 +155,14 @@ def main():
     # Execute traceroutes
     ips = []
     for dst in params['targets']:
-        stderr_res['dig'] = {}
-
         # Picks first IP addr returned by DNS lookup
         try:
-            ip = ipaddress.ip_address(dst)
+            _ = ipaddress.ip_address(dst)
         except ValueError:
             recode, dst = get_ip(dst)
             if stderr_dst := parse_dig_stderr(recode, params['verbose'], dst):
+                if "dig" not in stderr_res:
+                    stderr_res['dig'] = {}
                 stderr_res['dig'][dst] = stderr_dst
 
             if recode > SUCCESS:
@@ -155,7 +171,7 @@ def main():
 
     ip_list = " ".join(str(x) for x in ips)
 
-    trace_cmd = f'scamper -O json -i {ip_list} -c "trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q"'
+    trace_cmd = f'{SCAMPER_BIN} -O json -i {ip_list} -c "trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q"'
     try:
         res = sp.run(trace_cmd, capture_output=True, check=True, shell=True)
     except sp.CalledProcessError as err:
@@ -171,6 +187,7 @@ def main():
     output = res.stdout.decode('utf-8').split('\n')
     stdout_res = parse_trace_stdout(output)
     if not stdout_res:
+        print("error decoding")
         stderr_res['trace'] = {"exit_code": res.returncode,
                                "msg": res.stderr.decode('utf-8')}
 
