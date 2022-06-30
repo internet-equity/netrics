@@ -1,0 +1,70 @@
+= Netrics
+
+The (network) measurements execution framework.
+
+TODO: Objectives/justifications; features; installation and quick start-up....
+
+== Development
+
+=== Novel measurements
+
+The Netrics framework invokes executables available to the operating system. As such, built-in measurements enjoy next-to-nil privilege relative to any other installed executable; and, measurements abiding by the framework's expectations may be added with a minimum of effort.
+
+==== The contract
+
+TODO
+
+==== Testing
+
+Any executable may be invoked (with optional arguments) by the Netrics `execute` command:
+
+[source,sh]
+----
+netrics execute [options] command [arguments]
+----
+
+The above generates an execution report for use in development and debugging.
+
+Options such as `-i|--stdin` may be useful to supply measurment parameters to the executable according to the link:#_the_contract[framework's contract].
+
+=== Extending the framework
+
+==== Set-up
+
+The Netrics framework is implemented in https://www.python.org/[Python] and the framework's distribution is managed via https://python-poetry.org/[Poetry].
+
+*Python v3.10* may be supplied by an operating system package manager, by https://www.python.org/[python.org], or by a utility such as https://github.com/pyenv/pyenv[pyenv]; pyenv is _recommended_ for development but _not required_.
+
+With Python installed, *Poetry* may be installed https://python-poetry.org/docs/#installation[according to its instructions].
+
+TIP: If you are managing your own virtual environment, _e.g._ via https://github.com/pyenv/pyenv-virtualenv[pyenv-virtualenv], then this step may be as simple as `pip install poetry`. However, this tooling is not required, and Poetry offers its own automated set-up, as well as management of virtual environments.
+
+Finally, from the root directory of a repository clone, the framework may be installed in development mode:
+
+[source,sh]
+----
+poetry install
+----
+
+NOTE: Poetry will use any existing, activated virtual environment, or create its own into which dependencies will be installed.
+
+The `netrics` command is now available for use in your development environment.
+
+[IMPORTANT]
+====
+For simplicity, it will be presumed that `netrics` is available on your `PATH`. However, this depends upon activation of your virtual environment.
+
+A virtual environment under management by Poetry may be activated via sub-shell with:
+
+[source,sh]
+----
+poetry shell
+----
+
+Alternatively, any command installed into Poetry's virtual environment may be executed ad-hoc via the `run` command:
+
+[source,sh]
+----
+poetry run netrics ...
+----
+====
