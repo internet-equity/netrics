@@ -1,6 +1,6 @@
 = Netrics
 
-The (network) measurements execution framework.
+The network measurements execution framework.
 
 TODO: Objectives/justifications; features; installation and quick start-up....
 
@@ -20,7 +20,7 @@ Any executable may be invoked (with optional arguments) by the Netrics `execute`
 
 [source,sh]
 ----
-netrics execute [options] command [arguments]
+netrics debug execute [options] command [arguments]
 ----
 
 The above generates an execution report for use in development and debugging.
