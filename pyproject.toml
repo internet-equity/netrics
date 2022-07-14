@@ -14,9 +14,7 @@ python = "^3.10"
 #
 # FIXME: See dssg/argcmdr#27
 #
-# argcmdr = "^0.12"
-#
-argcmdr = {url = "https://github.com/dssg/argcmdr/archive/0.12.0.zip"}
+fate-scheduler = {url = "https://github.com/chicago-cdac/fate/archive/main.zip"}
 
 [tool.poetry.dev-dependencies]
 
