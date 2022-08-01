@@ -16,6 +16,8 @@ TODO
 
 ==== Testing
 
+==== execute
+
 Any executable may be invoked (with optional arguments) by the Netrics `execute` command:
 
 [source,sh]
@@ -26,6 +28,19 @@ netrics debug execute [options] command [arguments]
 The above generates an execution report for use in development and debugging.
 
 Options such as `-i|--stdin` may be useful to supply measurment parameters to the executable according to the link:#_the_contract[framework's contract].
+
+==== run
+
+Once added to Netrics configuration, executables become _tasks_, (also known as _measurements_ or _modules_). These may be invoked ad-hoc by the `run` command:
+
+[source,sh]
+----
+netrics debug run [options] task
+----
+
+The options and output of the `run` command are similar to those of `execute`.
+
+Unlike with scheduled tasks, the results of tasks performed by `run` are not, by default, persisted to file. Either specify option `--record` to capture these as configured, or option `--stdout` to capture these at an arbitrary path.
 
 === Extending the framework
 

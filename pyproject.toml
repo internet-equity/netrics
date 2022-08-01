@@ -14,7 +14,7 @@ python = "^3.10"
 #
 # FIXME: See dssg/argcmdr#27
 #
-fate-scheduler = {url = "https://github.com/chicago-cdac/fate/archive/main.zip"}
+fate-scheduler = {url = "https://github.com/chicago-cdac/fate/archive/0.0.2.zip"}
 
 [tool.poetry.dev-dependencies]
 
