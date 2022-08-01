@@ -21,6 +21,14 @@ fate-scheduler = {url = "https://github.com/chicago-cdac/fate/archive/0.0.2.zip"
 [tool.poetry.scripts]
 netrics = "netrics:main"
 
+# built-in measurement modules
+netrics-dev = "netrics.measurement.dev:main"
+netrics-dns-latency = "netrics.measurement.dns_latency:main"
+netrics-ndt7 = "netrics.measurement.ndt7:main"
+netrics-ookla = "netrics.measurement.ookla:main"
+netrics-ping = "netrics.measurement.ping:main"
+netrics-traceroute = "netrics.measurement.traceroute:main"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
