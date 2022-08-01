@@ -1,0 +1,39 @@
+[ping]
+
+#
+# FYI: Above we could've said:
+#
+#   param = {targets = [...]}
+#
+# ...but that'd be a long one-liner.
+#
+# TOML only lets our nested list split over multiple lines if we un-nest it,
+# with the below implicitly-nested table.
+#
+# (YAML is of course quite different!
+# ...And we support YAML configuration files as well.)
+#
+
+[ping.param]
+targets = [
+    "google.com",
+    "netflix.com",
+    "nytimes.com",
+    "facebook.com",
+    "reddit.com",
+    "github.com",
+    "linkedin.com",
+]
+
+
+#
+# And an empty top-level table is implied and may be omitted.
+#
+# That said, we *will* have settings to put there....
+#
+
+[traceroute.param]
+targets = [
+    "1.1.1.1",
+    "nytimes.com",
+]

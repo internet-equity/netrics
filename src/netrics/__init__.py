@@ -1,1 +1,1 @@
-from fate import main
+from .__main__ import main  # noqa: F401
