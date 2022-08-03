@@ -1,17 +1,15 @@
 import fate
 
 
-confspec = (
-    (
-        fate.conf.spec.default,
-        fate.conf.spec.task._replace(filename='measurements'),
-    ),
-    {'lib': 'netrics'},
+conf = fate.conf.get(
+    fate.conf.spec.default,
+    fate.conf.spec.task._replace(filename='measurements'),
+    lib='netrics',
 )
 
 
 def main():
-    fate.main(confspec=confspec)
+    fate.main(conf=conf)
 
 
 if __name__ == '__main__':
