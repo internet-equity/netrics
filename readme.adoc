@@ -96,6 +96,17 @@ With HTTPS, it is also possible to request a code archive of a particular tag or
 pip install https://github.com/chicago-cdac/netrics/archive/REF.zip
 ----
 
+=== Testing installation
+
+Any operable installation of Netrics should be able to execute the following command:
+
+[source,sh]
+----
+netrics debug execute -i {} netrics-ping
+----
+
+The report printed by the above should include the line: `Status: OK (Exit code 0)`.
+
 
 == Initialization
 
@@ -319,6 +330,15 @@ path:
   result: /var/log/netrics/result/
 ----
 |===
+
+=== Testing configuration
+
+Configuration may be tested with the `debug` command `run`:
+
+[source,sh]
+----
+netrics debug run [options] task
+----
 
 
 == Built-in measurements
