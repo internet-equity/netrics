@@ -560,7 +560,6 @@ if __name__ == '__main__':
 [source,toml]
 ----
 [tool.poetry.scripts]
-…
 netrics-MOD = "netrics.measurement.MOD:main"
 ----
 1. Add your command to this document's table of <<built-in-measurements,built-in measurements>>.
