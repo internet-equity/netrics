@@ -10,7 +10,7 @@ authors = [
 packages = [{include = "netrics", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 #
 # FIXME: See dssg/argcmdr#27
 #
