@@ -1,4 +1,5 @@
 = Netrics
+:idprefix:
 ifdef::env-github[]
 :tip-caption: :bulb:
 :note-caption: :information_source:
@@ -97,7 +98,7 @@ pip install https://github.com/chicago-cdac/netrics/archive/REF.zip
 
 == Initialization
 
-Outside of <<_package_managers,installation by a package manager>>, initialization is necessary to set up your Netrics installation.
+Outside of <<package_managers,installation by a package manager>>, initialization is necessary to set up your Netrics installation.
 
 [NOTE]
 ====
@@ -229,7 +230,7 @@ Note, however, that Netrics _will not_, by default, launch a shell to interpret 
 
 ==== command
 
-Netrics further features a plug-in system whereby programs abiding by <<_the_contract,its contract>> are granted greater functionality. Any program _may_ abide by this contract, (including those specified via `exec`). Programs available through the process environment's `PATH` under a name bearing the `netrics-` prefix – _e.g._, `netrics-ping` – enjoy the small privilege of becoming Netrics "commands."
+Netrics further features a plug-in system whereby programs abiding by <<the_contract,its contract>> are granted greater functionality. Any program _may_ abide by this contract, (including those specified via `exec`). Programs available through the process environment's `PATH` under a name bearing the `netrics-` prefix – _e.g._, `netrics-ping` – enjoy the small privilege of becoming Netrics "commands."
 
 In the above example, the measurement `ping-slim` specifies the command `ping`. This simply instructs Netrics to execute a program under the name `netrics-ping`.
 
@@ -237,7 +238,7 @@ The example measurement `ping` neglects to specify a command at all. The `ping` 
 
 ==== param
 
-Under the <<_the_contract,framework contract>>, programs may be given configured parameters via their process's standard input.
+Under the <<the_contract,framework contract>>, programs may be given configured parameters via their process's standard input.
 
 The example measurement `ping-slim` is configured to input to the `ping` command the parameters:
 
@@ -250,7 +251,7 @@ The example measurement `ping-slim` is configured to input to the `ping` command
 
 The `cowsay` measurement, on the other hand, is configured with the scalar string input: `"yo dawg"`.
 
-Structured (non-scalar) parameters are serialized to JSON by default. (This default may be overidden either per-measurement or globally. See <<_format>>.)
+Structured (non-scalar) parameters are serialized to JSON by default. (This default may be overidden either per-measurement or globally. See: <<format>>.)
 
 ==== format
 
@@ -415,7 +416,7 @@ esac
 
 *Parameterization*
 
-Tasks' input may be configured in the *measurements* file and is supplied to executables via their standard input. Structured input is serialized in JSON format by default. (See: <<_param>>.)
+Tasks' input may be configured in the *measurements* file and is supplied to executables via their standard input. Structured input is serialized in JSON format by default. (See: <<param>>.)
 
 We might extend our example to read and process JSON-encoded standard input via the `jq` utility:
 
@@ -503,7 +504,7 @@ For more robust examples, consult link:src/netrics/measurement/[Netrics's built-
 
 Measurement executables may nominally associate themselves with the Netrics framework and become "commands" by simply being available on the process environment `PATH` under a name beginning with the prefix `netrics-`.
 
-In this manner, <<_built_in_measurements,built-in measurements>> such as `netrics-ping` are distributed alongside the `netrics` framework command, and may be referred to in configuration as `ping`.
+In this manner, <<built_in_measurements,built-in measurements>> such as `netrics-ping` are distributed alongside the `netrics` framework command, and may be referred to in configuration as `ping`.
 
 Any other discovered executable, such as `netrics-cowsay`{empty}footnote:[There is no `netrics-cowsay` … yet!], will be treated the same way.
 
@@ -520,7 +521,7 @@ netrics debug execute [options] command [arguments]
 
 The above generates an execution report for use in development and debugging.
 
-Options such as `-i|--stdin` may be useful to supply measurment parameters to the executable according to the <<_the_contract,framework's contract>>.
+Options such as `-i|--stdin` may be useful to supply measurment parameters to the executable according to the <<the_contract,framework's contract>>.
 
 ==== run
 
@@ -537,7 +538,7 @@ Unlike with scheduled tasks, the results of tasks performed by `run` are not, by
 
 === Adding builtins
 
-Having <<_testing,tested your novel measurement>>, it might be added to the Netrics framework for availability across _all_ installations of this software via https://github.com/chicago-cdac/netrics/pulls[pull request].
+Having <<testing,tested your novel measurement>>, it might be added to the Netrics framework for availability across _all_ installations of this software via https://github.com/chicago-cdac/netrics/pulls[pull request].
 
 At this time, all Netrics builtins are implemented in Python, as simple submodules of the Netrics sub-package link:src/netrics/measurement/[netrics.measurement]. As such, built-in measurement module files need _not_ be marked with the "execute" bit _nor_ need they include a "shebang" line (_e.g._ `#!/usr/bin/env python3`).
 
@@ -561,7 +562,7 @@ if __name__ == '__main__':
 …
 netrics-MOD = "netrics.measurement.MOD:main"
 ----
-1. Add your command to this document's table of <<_built_in_measurements,built-in measurements>>.
+1. Add your command to this document's table of <<built_in_measurements,built-in measurements>>.
 
 === Extending the framework
 
