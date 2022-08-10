@@ -167,7 +167,7 @@ path = {result = "/root/cows/"}
 [cowsay-custom]
 exec = ["cowsay", "-e", "^^"]
 schedule = "@daily"
-param: "i heard you like cows"
+param = "i heard you like cows"
 # no file extension for result files; do not attempt to detect
 format = {result = ""}
 path = {result = "/root/cows/"}
