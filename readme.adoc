@@ -347,38 +347,58 @@ Netrics includes a set of built-in measurement commands, such as `netrics-ping`.
 
 Any task configuration may specify the `command` setting with the value `ping` to make use of this built-in; (or, a task with the label `ping` may omit this setting to default to this command).
 
-[cols="3",options=header]
+[cols="1,1,2,2",options=header]
 |===
 |command
 |executable
+|parameters (defaults)
 |description
 
 |`dev`
 |`netrics-dev`
 |...
+|...
 
 |`dns-latency`
 |`netrics-dns-latency`
+|...
 |...
 
 |`lml`
 |`netrics-lml`
 |...
+|...
 
 |`ndt7`
 |`netrics-ndt7`
+|...
 |...
 
 |`ookla`
 |`netrics-ookla`
 |...
+|...
 
 |`ping`
 |`netrics-ping`
-|...
+a|```json
+{
+  "count": 10,
+  "interval": 0.25,
+  "targets": [
+    "facebook.com",
+    "google.com",
+    "nytimes.com"
+  ],
+  "timeout": 5,
+  "verbose": false
+}
+```
+|Execute the `ping` utility, in parallel, for each host listed by parameter `targets`, given the iputils ping arguments `count`, `interval` and `timeout`. Data are parsed and recorded as a JSON document, with keys for each target host.
 
 |`traceroute`
 |`netrics-traceroute`
+|...
 |...
 |===
 
