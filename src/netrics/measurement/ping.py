@@ -1,10 +1,11 @@
-import subprocess as sp
+import subprocess
 import json
 import re
 import sys
+import types
 
-# Global error codes
-CONFIG_ERROR = 20
+from netrics import errno
+
 
 # Local error codes
 SUCCESS = 0
@@ -12,146 +13,157 @@ NO_REPLY = 1
 LAN_ERROR = 2
 
 # Default parameters
-PARAM_DEFAULTS = {"targets": ["google.com", "facebook.com", "nytimes.com"],
-                  "interval": 0.25,
-                  "count": 10,
-                  "timeout": 5,
-                  "verbose": False}
+PARAM_DEFAULTS = {
+    "targets": [
+        "google.com",
+        "facebook.com",
+        "nytimes.com",
+    ],
+    "count": 10,
+    "interval": 0.25,
+    "timeout": 5,
+    "verbose": False,
+}
+
+CONFIG_MESSAGE = "Parameter type error (count and timeout must be of type int)"
 
 
-def stdin_parser():
-    """
-    Verifies the type of the input parameters.
+def get_params():
+    """Ensure the type of the input parameters.
 
     Returns
     -------
     params: A dict containing input parameters
-    err: Exit code, 20 if unexpected type
-    """
 
-    # Read config from stdin, use default params otherwise
-    params = dict(PARAM_DEFAULTS, **json.load(sys.stdin))
-    err = None
+    Raises
+    ------
+    ValueError
+
+    """
+    # Read params from stdin with defaults
+    input_ = sys.stdin.read()
+    params = dict(PARAM_DEFAULTS, **json.loads(input_ or '{}'))
 
     # Check type of parameters (count and timeout must be int)
-    try:
-        params['interval'] = str(float(params['interval']))
-        params['count'] = str(int(params['count']))
-        params['timeout'] = str(int(params['timeout']))
-    except ValueError:
-        err = CONFIG_ERROR
+    params['interval'] = str(float(params['interval']))
+    params['count'] = str(int(params['count']))
+    params['timeout'] = str(int(params['timeout']))
 
-    return params, err
+    return types.SimpleNamespace(**params)
 
 
-def stderr_parser(exit_code, verbose, stderr):
+def result_log(returncode, stderr, verbose):
+    """Construct log message for given result.
+
+    Arguments
+    ---------
+    returncode: The return code from the ping command.
+    stderr: Stderr returned by ping.
+    verbose: Module parameter to indicate verbose output.
+
     """
-    Parses error message and error code
+    if returncode == SUCCESS:
+        return {'retcode': returncode, 'message': "Success"} if verbose else None
 
-    Attributes:
-        exit_code: The return code from the ping command.
-        verbose: Module parameter to indicate verbose output.
-        stderr: Stderr returned by ping.
-    """
-
-
-    if exit_code == SUCCESS:
-        return {'retcode': exit_code, 'message': "Success"} if verbose else None
-
-    elif exit_code == NO_REPLY:
-        return {'retcode': exit_code,
+    if returncode == NO_REPLY:
+        return {'retcode': returncode,
                 'message': "Transmission successful, some packet loss"} if verbose else None
 
-    elif exit_code == LAN_ERROR:
-        return {'retcode': exit_code, "message": "Local network error"}
+    if returncode == LAN_ERROR:
+        return {'retcode': returncode, "message": "Local network error"}
 
-    elif exit_code > 0:
-        return {'retcode': exit_code, 'message': stderr}
+    return {'retcode': returncode, 'message': stderr}
 
+
+def parse_result(output):
+    """Parse ping output and returns dict with results."""
+
+    # Extract packet loss stats
+    pkt_loss_match = re.search(r', ([0-9.]*)% packet loss', output, re.MULTILINE)
+
+    if pkt_loss_match:
+        pkt_loss = float(pkt_loss_match.group(1))
     else:
-        return None
+        pkt_loss = -1.0
 
+    # Extract RTT stats
+    rtt_match = re.search(
+        r'rtt [a-z/]* = ([0-9.]*)/([0-9.]*)/([0-9.]*)/([0-9.]*) ms',
+        output
+    )
 
-def stdout_parser(res):
-    """
-    Parses ping output and returns dict with results
+    if rtt_match:
+        rtt_values = [float(value) for value in rtt_match.groups()]
+    else:
+        rtt_values = [-1.0] * 4
 
-    """
+    rtt_keys = ('rtt_min', 'rtt_avg', 'rtt_max', 'rtt_stddev')
 
-    stats = {}
-    # Extract packet loss stats from output
-    stats['pkt_loss'] = float(re.findall(', ([0-9.]*)% packet loss',
-                                         res, re.MULTILINE)[0])
+    rtt_stats = dict(zip(rtt_keys, rtt_values))
 
-    # Extract RTT stats from output
-    try:
-        rtt_stats = re.findall(
-            'rtt [a-z/]* = ([0-9.]*)/([0-9.]*)/([0-9.]*)/([0-9.]*) ms',
-            res)[0]
-    except IndexError:
-        rtt_stats = [-1] * 4
-
-    rtt_stats = [float(v) for v in rtt_stats]
-
-    stats['rtt_min'] = rtt_stats[0]
-    stats['rtt_avg'] = rtt_stats[1]
-    stats['rtt_max'] = rtt_stats[2]
-    stats['rtt_stddev'] = rtt_stats[3]
-
-    return stats
+    return dict(rtt_stats, pkt_loss=pkt_loss)
 
 
 def main():
-
-    # Initializing module contract structures
-    stdout_res = {}
-    stderr_res = {}
-    exit_code_dst = SUCCESS
-
     # Parse stdin
-    params, err = stdin_parser()
-    if err:
-        stderr_res['error'] = {"exit_code": err,
-                               "msg": """Config param type error (count and
-                               timeout must be of type int"""}
-        json.dump(stderr_res, sys.stderr)
-        sys.exit(err)
+    try:
+        params = get_params()
+    except ValueError:
+        json.dump({'error': CONFIG_MESSAGE}, sys.stderr)
+        sys.exit(errno.CONFIG_ERROR)
 
-    # Execute ping
+    # Launch pings
     procs = []
-    for dst in params['targets']:
-        cmd = ['ping', '-i', params['interval'],
-               '-c', params['count'], '-w', params['timeout'], dst]
+    for dst in params.targets:
+        args = (
+            'ping',
+            '-i', params.interval,
+            '-c', params.count,
+            '-w', params.timeout,
+            dst,
+        )
 
-        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, text=True)
-        procs.append((dst, p))
+        proc = subprocess.Popen(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        procs.append((dst, proc))
 
     # Process results
-    for (dst, p) in procs:
-        p.wait()
+    dst_code = SUCCESS
+    log = {}
+    result = {}
 
-        # Parse ping exit code and write to output if message or error
-        if stderr_dst := stderr_parser(p.returncode, params['verbose'],
-                                        p.stderr.read()):
-            stderr_res[dst] = stderr_dst
+    for (dst, proc) in procs:
+        proc.wait()
 
-        exit_code_dst = max(exit_code_dst, p.returncode)
+        # We'll report the "worst" exit code as our own
+        dst_code = max(dst_code, proc.returncode)
 
-        # If LAN error, don't write stdout 
-        if p.returncode > NO_REPLY:
+        # Parse ping exit code and write to log if message or error
+        if dst_log := result_log(proc.returncode, proc.stderr.read(), params.verbose):
+            log[dst] = dst_log
+
+        # If LAN error, don't write result
+        if proc.returncode >= LAN_ERROR:
             continue
 
-        output = p.stdout.read()
-        stdout_res[dst] = stdout_parser(output)
+        result[dst] = parse_result(proc.stdout.read())
 
+    exit_code = dst_code if dst_code > NO_REPLY else 0
 
-    exit_code = exit_code_dst if exit_code_dst > 1 else 0
-    # Communicate results and errors
-    if exit_code == SUCCESS:
-        json.dump(stdout_res, sys.stdout)
-    if stderr_res:
-        json.dump(stderr_res, sys.stderr)
+    # Write out logs and results
+    if exit_code == 0:
+        json.dump(result, sys.stdout)
+
+    if log:
+        json.dump(log, sys.stderr)
+
     sys.exit(exit_code)
+
 
 if __name__ == '__main__':
     main()
