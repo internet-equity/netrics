@@ -102,7 +102,7 @@ Any operable installation of Netrics should be able to execute the following com
 
 [source,sh]
 ----
-netrics debug execute -i {} netrics-ping
+netrics debug execute netrics-ping
 ----
 
 The report printed by the above should include the line: `Status: OK (Exit code 0)`.
