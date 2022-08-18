@@ -41,8 +41,9 @@ def get_params():
 
     """
     # Read params from stdin with defaults
-    input_ = sys.stdin.read()
-    params = dict(PARAM_DEFAULTS, **json.loads(input_ or '{}'))
+    params = PARAM_DEFAULTS.copy()
+    if input_ := sys.stdin.read():
+        params.update(json.loads(input_))
 
     # Check type of parameters (count and timeout must be int)
     params['interval'] = str(float(params['interval']))
@@ -105,7 +106,7 @@ def parse_result(output):
 
 
 def main():
-    # Parse stdin
+    # Parse stdin params
     try:
         params = get_params()
     except ValueError:
@@ -147,7 +148,7 @@ def main():
         if dst_log := result_log(proc.returncode, proc.stderr.read(), params.verbose):
             log[dst] = dst_log
 
-        # If LAN error, don't write result
+        # If LAN error, don't expect a result
         if proc.returncode >= LAN_ERROR:
             continue
 
