@@ -191,8 +191,7 @@ def main():
 
     # Resolve target if given as hostname
     try:
-        _ = ipaddress.ip_address(params['target'])
-        target_ip = params['target']
+        ipaddress.ip_address(params['target'])
     except ValueError:
         recode, target_ip = get_ip(params['target'])
         if stderr_dst := parse_dig_stderr(recode, params['verbose'], target_ip):
