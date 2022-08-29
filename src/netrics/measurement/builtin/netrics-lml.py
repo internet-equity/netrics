@@ -77,9 +77,10 @@ def parse_lml(out):
     for line in out:
         try:
             record = json.loads(line)
-            if record['type'] != 'trace':
-                continue
-        except json.decoder.JSONDecodeError:
+        except ValueError:
+            continue
+
+        if record.get('type') != 'trace':
             continue
 
         res['src'] = record['src']
@@ -174,8 +175,7 @@ def main():
     exit_code = SUCCESS
 
     # Check that scamper is executable and on PATH
-    exit_code = is_executable(SCAMPER_BIN)
-    if exit_code != SUCCESS:
+    if not is_executable(SCAMPER_BIN):
         stderr_res['bin'] = {'retcode': exit_code,
                              'message': 'Scamper either not on PATH or not executable'}
         json.dump(stderr_res, sys.stderr)
@@ -191,8 +191,7 @@ def main():
 
     # Resolve target if given as hostname
     try:
-        _ = ipaddress.ip_address(params['target'])
-        target_ip = params['target']
+        ipaddress.ip_address(params['target'])
     except ValueError:
         recode, target_ip = get_ip(params['target'])
         if stderr_dst := parse_dig_stderr(recode, params['verbose'], target_ip):
@@ -200,12 +199,17 @@ def main():
                 stderr_res['dig'] = {}
             stderr_res['dig'][params['target']] = stderr_dst
 
-    cmd = f'{SCAMPER_BIN} -O json -i {target_ip} -c "trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q"'
+    cmd = (
+        SCAMPER_BIN,
+        '-O', 'json',
+        '-i, target_ip,
+        '-c', f'trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q',
+    )
 
     # Run scamper traceroute
     try:
-        lml_res = sp.run(cmd, capture_output=True, shell=True, check=True)
-        output = lml_res.stdout.decode('utf-8').split('\n')
+        lml_res = sp.run(cmd, capture_output=True, text=True, check=True)
+        output = lml_res.stdout.splitlines()
         stdout_res = parse_lml(output)
         if error := parse_scamper_stderr(lml_res.returncode,
                                          params['verbose'],
