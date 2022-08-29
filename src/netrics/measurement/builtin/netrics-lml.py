@@ -199,7 +199,12 @@ def main():
                 stderr_res['dig'] = {}
             stderr_res['dig'][params['target']] = stderr_dst
 
-    cmd = f'{SCAMPER_BIN} -O json -i {target_ip} -c "trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q"'
+    cmd = (
+        SCAMPER_BIN,
+        '-O', 'json',
+        '-i, target_ip,
+        '-c', f'trace -P icmp-paris -q {params["attempts"]} -w {params["timeout"]} -Q',
+    )
 
     # Run scamper traceroute
     try:
