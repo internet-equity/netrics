@@ -208,8 +208,8 @@ def main():
 
     # Run scamper traceroute
     try:
-        lml_res = sp.run(cmd, capture_output=True, shell=True, check=True)
-        output = lml_res.stdout.decode('utf-8').split('\n')
+        lml_res = sp.run(cmd, capture_output=True, text=True, check=True)
+        output = lml_res.stdout.splitlines()
         stdout_res = parse_lml(output)
         if error := parse_scamper_stderr(lml_res.returncode,
                                          params['verbose'],
