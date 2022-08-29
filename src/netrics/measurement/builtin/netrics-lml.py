@@ -77,9 +77,10 @@ def parse_lml(out):
     for line in out:
         try:
             record = json.loads(line)
-            if record['type'] != 'trace':
-                continue
-        except json.decoder.JSONDecodeError:
+        except ValueError:
+            continue
+
+        if record.get('type') != 'trace':
             continue
 
         res['src'] = record['src']
