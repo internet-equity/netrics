@@ -175,8 +175,7 @@ def main():
     exit_code = SUCCESS
 
     # Check that scamper is executable and on PATH
-    exit_code = is_executable(SCAMPER_BIN)
-    if exit_code != SUCCESS:
+    if not is_executable(SCAMPER_BIN):
         stderr_res['bin'] = {'retcode': exit_code,
                              'message': 'Scamper either not on PATH or not executable'}
         json.dump(stderr_res, sys.stderr)
