@@ -3,10 +3,21 @@ from functools import partial
 import fate
 
 
+#
+# load configuration (customized with vanity tweaks, etc.)
+#
 conf = fate.conf.get(
-    fate.conf.spec.default,
-    fate.conf.spec.task._replace(filename='measurements'),
+    # override default configuration file settings
+    fate.conf.spec.default,                                 # no change
+    fate.conf.spec.task._replace(filename='measurements'),  # measurements rather than tasks
+
+    # use own distro name
     lib='netrics',
+
+    # use own default files
+    # and allow fallback to these if configuration is missing
+    builtin_path='netrics.conf.include',
+    builtin_fallback=True,
 )
 
 

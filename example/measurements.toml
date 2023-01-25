@@ -1,9 +1,10 @@
 [ping]
+schedule = "*/5 * * * *"
 
 #
 # FYI: Above we could've said:
 #
-#   param = {targets = [...]}
+#   param = {destinations = [...]}
 #
 # ...but that'd be a long one-liner.
 #
@@ -15,7 +16,10 @@
 #
 
 [ping.param]
-targets = [
+# list of network locators
+#
+# (OR dict of network locator: results label)
+destinations = [
     "google.com",
     "netflix.com",
     "nytimes.com",
@@ -26,11 +30,8 @@ targets = [
 ]
 
 
-#
-# And an empty top-level table is implied and may be omitted.
-#
-# That said, we *will* have settings to put there....
-#
+[traceroute]
+schedule = "*/5 * * * *"
 
 [traceroute.param]
 targets = [
