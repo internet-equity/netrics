@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netrics-measurements"
-version = "0.0.1"
+version = "0.0.1-rc.1"
 description = "The extensible network measurements framework"
 license = "MIT"
 authors = [
@@ -17,6 +17,7 @@ netifaces = "^0.11.0"
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
+# main entrypoints
 netrics = "netrics:main"
 "netrics.s" = "netrics:serve"
 "netrics.d" = "netrics:daemon"
