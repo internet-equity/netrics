@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netrics-measurements"
-version = "0.0.1-rc.1"
+version = "0.0.1-rc.2"
 description = "The extensible network measurements framework"
 license = "MIT"
 authors = [
@@ -11,7 +11,7 @@ packages = [{include = "netrics", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fate-scheduler = "0.1.0-rc.4"
+fate-scheduler = "0.1.0-rc.5"
 netifaces = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
