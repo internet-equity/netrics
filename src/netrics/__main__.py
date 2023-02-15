@@ -25,6 +25,19 @@ def entrypoint(hook):
     hook(
         conf=conf,
         banner_path='netrics.cli.include.banner',
+        #
+        # entry_points: currently only used for configuring shell completion
+        #
+        # fate defaults to LIB, LIBs & LIBd (like its fate, fates & fated)
+        #
+        # we have those, but those names would look weird, so we're
+        # using the following instead.
+        #
+        entry_points=(
+            'netrics',
+            'netrics.s',
+            'netrics.d',
+        ),
     )
 
 

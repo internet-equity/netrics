@@ -67,7 +67,12 @@ With `pipx` installed, the above command alone will create a virtual environment
 
 ==== PyPI
 
-NOTE: At its current stage of development Netrics is only available for download from its source repository (see below).
+Netrics may be installed from https://pypi.org/project/netrics-measurements/[PyPI] via `pip`, _e.g._:
+
+[source,sh]
+----
+pip install netrics-measurements
+----
 
 ==== Source
 
@@ -110,36 +115,48 @@ The report printed by the above should include the line: `Status: OK (Exit code 
 
 == Initialization
 
-Outside of <<package-managers,installation by a package manager>>, initialization is necessary to set up your Netrics installation.
+Outside of <<package-managers,installation by a package manager>>, initialization is suggested to set up your Netrics installation.
 
-[NOTE]
-====
-The `init` command is WIP.
+<<PyPI>> and <<source,source>> distributions feature the `netrics` sub-command `init`:
 
-Without proper initialization, you might see an error like the following:
-
- netrics debug run: error: missing configuration file (tried: [PATH]/netrics/defaults{.toml,.yaml})
-
-That is, Netrics requires configuration files under an installation-dependent `PATH`.
-
-For example configuration, consult the https://github.com/chicago-cdac/netrics/tree/main/test/[source repository directory: test]. You may copy or symbolically link example configuration files to your Netrics installation path.
-
-Alternatively, simply `touch` the following paths to fulfill initialization:
-
-[source,bash]
+[source,sh]
 ----
-touch [PATH]/netrics/{defaults,measurements}.toml
+netrics init
 ----
 
-Note that Netrics supports both TOML and YAML configuration formats.
-====
+The above, (executed from a standard shell), will walk you through the process of initializing your system for Netrics, (executing all tasks which follow below).
 
+=== Configuration initialization
+
+To initialize configuration in particular, `init` features the sub-command `conf`:
+
+[source,sh]
+----
+netrics init conf
+----
+
+The above will copy the built-in default configuration distributed with Netrics to the appropriate path on your system (or to a specified path). From there, this configuration may be customized.
+
+=== Shell completion
+
+To install Netrics command tab-completion for your shell, `init` features the sub-command `comp`:
+
+[source,sh]
+----
+netrics init comp
+----
+
+The above will install tab-completion files for your user, system-wide, (or to a specified path).
+
+Shells currently supported include: bash, fish and tcsh.
 
 == Configuration
 
-Netrics is _really_ a distribution of https://github.com/chicago-cdac/fate[Fate], and as such shares its configuration and execution scheme.
+NOTE: Netrics is _really_ a distribution of https://github.com/chicago-cdac/fate[Fate], and as such shares its configuration and execution scheme.
 
-Netrics expects two configuration files: *measurements* and *defaults*. Both files _must_ exist; but, either file _may_ be empty. (Although, without measurements, there's little for Netrics to do!)
+Netrics expects two configuration files: *measurements* and *defaults*.
+
+Should either file not be found on the sytem, Netrics will fall back to its built-in configuration. As necessary for your installation, to initialize these files for customization, see <<Initialization>>.
 
 TIP: Netrics supports both TOML and YAML configuration formats.
 
