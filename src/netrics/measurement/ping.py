@@ -2,19 +2,12 @@
 import re
 import subprocess
 from collections import defaultdict
-from numbers import Real
 
-from schema import (
-    And,
-    Or,
-    Optional,
-    Use,
-    SchemaError,
-)
+from schema import Optional
 
 from netrics import task
 
-from .common import require_lan
+from .common import default, require_lan
 
 
 #
@@ -32,65 +25,37 @@ PING_CODES = {
 
 
 #
-# params
+# params schema
 #
 # input -- a (deserialized) mapping -- is entirely optional.
 #
 # a dict, of the optional param keys, their defaults, and validations of
-# their values, is given below.
+# their values, is given below, (extending the globally-supported input
+# parameter schema given by `task.schema`).
 #
-
-Text = And(str, len)  # non-empty str
-
-PARAM_SCHEMA = {
+PARAMS = task.schema.extend('ping_latency', {
     # destinations: (ping): list of hosts
     #                       OR mapping of hosts to their labels (for results)
     Optional('destinations',
-             default=('google.com',
-                      'facebook.com',
-                      'nytimes.com')): Or({Text: Text},
-                                          And([Text],
-                                              lambda dests: len(dests) == len(set(dests))),
-                                          error="destinations: must be non-repeating list "
-                                                "of network locators or mapping of these "
-                                                "to their result labels"),
+             default=default.PING_DESTINATIONS): task.schema.DestinationCollection(),
 
     # count: (ping): natural number
-    Optional('count', default='10'): And(int,
-                                         lambda count: count > 0,
-                                         Use(str),
-                                         error="count: int must be greater than 0"),
+    Optional('count', default='10'): task.schema.NaturalStr('count'),
 
     # interval: (ping): int/decimal seconds no less than 2ms
-    Optional('interval', default='0.25'): And(Real,
-                                              lambda interval: interval >= 0.002,
-                                              Use(str),
-                                              error="interval: seconds must not be less than 2ms"),
+    Optional('interval',
+             default='0.25'): task.schema.BoundedRealStr('interval',
+                                                         'seconds may be no less than 0.002 (2ms)',
+                                                         lambda interval: interval >= 0.002),
 
     # deadline: (ping): positive integer seconds
-    Optional('deadline', default='5'): And(int,
-                                           lambda deadline: deadline >= 0,
-                                           Use(str),
-                                           error="deadline: int seconds must not be less than 0"),
-
-    # result: mappping
-    Optional('result', default={'flat': True,
-                                'label': 'ping_latency',
-                                'meta': True}): {
-        # flat: flatten ping destination results dict to one level
-        Optional('flat', default=True): bool,
-
-        # wrap: wrap the above (whether flat or not) in a measurement label
-        Optional('label', default='ping_latency'): Or(False, None, Text),
-
-        # meta: wrap all of the above (whatever it is) with metadata (time, etc.)
-        Optional('meta', default=True): bool,
-    },
-}
+    Optional('deadline', default='5'): task.schema.PositiveIntStr('deadline', 'seconds'),
+})
 
 
+@task.param.require(PARAMS)
 @require_lan
-def main():
+def main(params):
     """Measure ping latency to configured hosts.
 
     The local network is queried first to ensure operation.
@@ -104,13 +69,6 @@ def main():
     according to configuration (`result`).
 
     """
-    # read input params
-    try:
-        params = task.param.read(schema=PARAM_SCHEMA)
-    except SchemaError as exc:
-        task.log.critical(error=str(exc), msg="input error")
-        return task.status.conf_error
-
     # parallelize pings
     processes = {
         destination: subprocess.Popen(
@@ -192,7 +150,7 @@ def main():
     # write results
     task.result.write(results,
                       label=params.result.label,
-                      meta=params.result.meta)
+                      annotate=params.result.annotate)
 
     return task.status.success
 
