@@ -11,7 +11,7 @@ packages = [{include = "netrics", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fate-scheduler = "0.1.0-rc.6"
+fate-scheduler = "0.1.0-rc.7"
 netifaces = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
@@ -25,6 +25,8 @@ netrics = "netrics:main"
 # built-in measurement modules
 netrics-dev = "netrics.measurement.dev:main"
 netrics-dns-latency = "netrics.measurement.dns_latency:main"
+netrics-lml = "netrics.measurement.lml:main"
+netrics-lml-scamper = "netrics.measurement.lml:main"
 netrics-ndt7 = "netrics.measurement.ndt7:main"
 netrics-ookla = "netrics.measurement.ookla:main"
 netrics-ping = "netrics.measurement.ping:main"
