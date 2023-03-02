@@ -1,5 +1,6 @@
 from .connectivity import (  # noqa: F401
     default,
+    output,
     require_lan,
     require_net,
 )
