@@ -24,5 +24,12 @@ ping:
       195.89.146.193: Stockholm
       190.98.158.1: Sao_Paulo
 
+lml:
+  command: lml-traceroute
+  schedule: "H/5 * * * *"
+  param:
+    destinations:
+      1.1.1.1: Cloudflare_DNS
+
 # lml-scamper:
 #   schedule: "H/5 * * * *"
