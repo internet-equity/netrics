@@ -1,5 +1,4 @@
 """Measure ping latency to configured hosts."""
-import re
 import subprocess
 from collections import defaultdict
 
@@ -7,7 +6,7 @@ from schema import Optional
 
 from netrics import task
 
-from .common import default, require_lan
+from .common import default, output, require_lan
 
 
 #
@@ -130,7 +129,7 @@ def main(params):
 
     # parse detailed results
     results = {
-        destination: parse_output(stdout)
+        destination: output.parse_ping(stdout)
         for (destination, (stdout, _stderr)) in outputs.items()
     }
 
@@ -153,27 +152,3 @@ def main(params):
                       annotate=params.result.annotate)
 
     return task.status.success
-
-
-def parse_output(output):
-    """Parse ping output and return dict of results."""
-
-    # Extract RTT stats
-    rtt_match = re.search(
-        r'rtt [a-z/]* = ([0-9.]*)/([0-9.]*)/([0-9.]*)/([0-9.]*) ms',
-        output
-    )
-
-    rtt_values = [float(value) for value in rtt_match.groups()] if rtt_match else [-1.0] * 4
-
-    rtt_keys = ('rtt_min_ms', 'rtt_avg_ms', 'rtt_max_ms', 'rtt_mdev_ms')
-
-    rtt_stats = zip(rtt_keys, rtt_values)
-
-    # Extract packet loss stats
-    pkt_loss_match = re.search(r', ([0-9.]*)% packet loss', output, re.MULTILINE)
-
-    pkt_loss = float(pkt_loss_match.group(1)) if pkt_loss_match else -1.0
-
-    # Return combined dict
-    return dict(rtt_stats, packet_loss_pct=pkt_loss)
