@@ -1,3 +1,10 @@
+hops:
+  command: hops-traceroute
+  schedule: "H/5 * * * *"
+  param:
+    destinations:
+      www.google.com: google
+
 lml:
   command: lml-traceroute
   schedule: "H/5 * * * *"

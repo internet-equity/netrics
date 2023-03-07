@@ -25,6 +25,7 @@ netrics = "netrics:main"
 # built-in measurement modules
 netrics-dev = "netrics.measurement.dev:main"
 netrics-dns-latency = "netrics.measurement.dns_latency:main"
+netrics-hops-traceroute = "netrics.measurement.hops_traceroute:main"
 netrics-lml = "netrics.measurement.lml:main"
 netrics-lml-scamper = "netrics.measurement.lml:main"
 netrics-lml-traceroute = "netrics.measurement.lml_traceroute:main"
