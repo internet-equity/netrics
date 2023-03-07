@@ -159,7 +159,7 @@ class require_net(require_lan):
 
     """
     schema = ConfSchema({
-        Optional('destinations', default=default.PING_DESTINATIONS):
+        Optional('destinations', default=default.DESTINATIONS):
             task.schema.DestinationList(),
 
         Optional('attempts', default=command.DEFAULT_ATTEMPTS):
