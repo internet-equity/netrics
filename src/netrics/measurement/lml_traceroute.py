@@ -1,7 +1,6 @@
 """Measure latency to the "last mile" host via traceroute & ping."""
 import random
 import re
-import shutil
 import subprocess
 import typing
 from ipaddress import ip_address
@@ -10,7 +9,11 @@ from schema import Optional
 
 from netrics import task
 
-from .common import output, require_net
+from .common import (
+    output,
+    require_exec,
+    require_net,
+)
 
 
 #
@@ -39,8 +42,9 @@ PARAMS = task.schema.extend('last_mile_rtt', {
 
 
 @task.param.require(PARAMS)
+@require_exec('traceroute')
 @require_net
-def main(params):
+def main(traceroute, params):
     """Measure latency to the "last mile" host via traceroute and ping.
 
     The local network, and then internet hosts (as configured in global
@@ -62,13 +66,6 @@ def main(params):
     written as well.
 
     """
-    # ensure traceroute on PATH
-    # (ping is used by require_net)
-    traceroute_path = shutil.which('traceroute')
-    if traceroute_path is None:
-        task.log.critical("traceroute executable not found")
-        return task.status.file_missing
-
     # randomize target from configured destination(s)
     target_hosts = list(params.destinations)
     random.shuffle(target_hosts)
@@ -77,9 +74,9 @@ def main(params):
     for target_host in target_hosts:
         # trace target
         try:
-            traceroute = subprocess.run(
+            traceroute_process = subprocess.run(
                 (
-                    traceroute_path,
+                    traceroute,
                     target_host,
                 ),
                 capture_output=True,
@@ -99,13 +96,13 @@ def main(params):
         # extract "last mile" host from trace
         try:
             last_mile = LastMileResult.extract(target_host,
-                                               traceroute.stdout,
-                                               traceroute.stderr)
+                                               traceroute_process.stdout,
+                                               traceroute_process.stderr)
         except TracerouteAddressError as exc:
             task.log.error(
                 dest=target_host,
-                stdout=traceroute.stdout,
-                stderr=traceroute.stderr,
+                stdout=traceroute_process.stdout,
+                stderr=traceroute_process.stderr,
                 line=exc.line,
                 msg='failed to parse traceroute hop ip address from output line',
             )
@@ -113,8 +110,8 @@ def main(params):
         except TracerouteParseError as exc:
             task.log.error(
                 dest=target_host,
-                stdout=traceroute.stdout,
-                stderr=traceroute.stderr,
+                stdout=traceroute_process.stdout,
+                stderr=traceroute_process.stderr,
                 line=exc.line,
                 msg='unexpected traceroute output line or parse failure',
             )
@@ -122,14 +119,14 @@ def main(params):
         except TracerouteOutputError:
             task.log.error(
                 dest=target_host,
-                stdout=traceroute.stdout,
-                stderr=traceroute.stderr,
+                stdout=traceroute_process.stdout,
+                stderr=traceroute_process.stderr,
                 msg='failed to extract last mile ip from traceroute output',
             )
             continue
 
         # ping last mile host
-        ping = subprocess.run(
+        ping_process = subprocess.run(
             (
                 'ping',
                 '-c', params.count,
@@ -141,18 +138,18 @@ def main(params):
             text=True,
         )
 
-        if ping.returncode > 1:
+        if ping_process.returncode > 1:
             task.log.critical(
                 dest=last_mile.ip_address,
-                status=f'Error ({ping.returncode})',
-                stdout=ping.stdout,
-                stderr=ping.stderr,
+                status=f'Error ({ping_process.returncode})',
+                stdout=ping_process.stdout,
+                stderr=ping_process.stderr,
                 msg='last mile ping failure',
             )
             return task.status.no_host
 
         # parse ping results
-        ping_stats = output.parse_ping(ping.stdout)
+        ping_stats = output.parse_ping(ping_process.stdout)
 
         break  # we're done!
     else:

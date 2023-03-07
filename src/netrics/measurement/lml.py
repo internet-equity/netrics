@@ -1,7 +1,6 @@
 """Measure latency to the "last mile" host via scamper."""
 import json
 import random
-import shutil
 import statistics
 import subprocess
 from ipaddress import ip_address
@@ -11,7 +10,11 @@ from schema import Optional
 
 from netrics import task
 
-from .common import AddressLookups, require_net
+from .common import (
+    AddressLookups,
+    require_exec,
+    require_net,
+)
 
 
 #
@@ -45,8 +48,9 @@ PARAMS = task.schema.extend('last_mile_rtt', {
 
 
 @task.param.require(PARAMS)
+@require_exec('scamper')
 @require_net
-def main(params):
+def main(scamper, params):
     """Measure latency to the "last mile" host via scamper.
 
     The local network, and then internet hosts (as configured in global
@@ -67,12 +71,6 @@ def main(params):
     parsed and written out according to configuration.
 
     """
-    # ensure scamper on PATH
-    scamper_path = shutil.which('scamper')
-    if scamper_path is None:
-        task.log.critical("scamper executable not found")
-        return task.status.file_missing
-
     # resolve destination(s) given by domain to IP
     address_lookups = AddressLookups(params.destinations)
 
@@ -97,7 +95,7 @@ def main(params):
         try:
             process = subprocess.run(
                 (
-                    scamper_path,
+                    scamper,
                     '-O', 'json',
                     '-c', trace_cmd,
                     '-i', target_ip,

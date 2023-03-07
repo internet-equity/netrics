@@ -36,7 +36,7 @@ PARAMS = task.schema.extend('ping_latency', {
     # destinations: (ping): list of hosts
     #                       OR mapping of hosts to their labels (for results)
     Optional('destinations',
-             default=default.PING_DESTINATIONS): task.schema.DestinationCollection(),
+             default=default.DESTINATIONS): task.schema.DestinationCollection(),
 
     # count: (ping): natural number
     Optional('count', default='10'): task.schema.NaturalStr('count'),

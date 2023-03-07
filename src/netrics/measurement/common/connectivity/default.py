@@ -1,3 +1,3 @@
-PING_DESTINATIONS = ('google.com',
-                     'facebook.com',
-                     'nytimes.com')
+DESTINATIONS = ('google.com',
+                'facebook.com',
+                'nytimes.com')
