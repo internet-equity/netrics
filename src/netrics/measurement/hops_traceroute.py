@@ -25,7 +25,7 @@ PARAMS = task.schema.extend('hops_to_target', {
              default=default.DESTINATIONS): task.schema.DestinationCollection(),
 
     # max_hop: (traceroute): natural number
-    Optional('max_hop', default='20'): task.schema.NaturalStr('max_hop'),
+    Optional('max_hop', default='64'): task.schema.NaturalStr('max_hop'),
 
     # tries: (traceroute): natural number
     Optional('tries', default='5'): task.schema.NaturalStr('tries'),
