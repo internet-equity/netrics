@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netrics-measurements"
-version = "0.0.1-rc.4"
+version = "0.0.1-rc.5"
 description = "The extensible network measurements framework"
 license = "MIT"
 authors = [
