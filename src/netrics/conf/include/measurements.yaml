@@ -1,3 +1,6 @@
+dev:
+  schedule: "H/5 * * * *"
+
 dns-latency:
   schedule: "H/5 * * * *"
   param:

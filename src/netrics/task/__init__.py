@@ -1,4 +1,4 @@
-from fate.task import log  # noqa: F401
+from fate.task import log, state  # noqa: F401
 
 from . import (  # noqa: F401
     param,
