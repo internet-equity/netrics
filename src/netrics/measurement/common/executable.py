@@ -6,10 +6,10 @@ import netrics.task
 
 
 class ExecTask:
-    """Wrapped callable requiring a named system executable."""
+    """Wrapped callable requiring named system executable(s)."""
 
-    def __init__(self, name, func):
-        self._executable_name_ = name
+    def __init__(self, func, names):
+        self._executable_names_ = names
 
         # assign func's __module__, __name__, etc.
         # (but DON'T update __dict__)
@@ -21,23 +21,24 @@ class ExecTask:
         return repr(self.__wrapped__)
 
     def __call__(self, *args, **kwargs):
-        # ensure executable on PATH
-        executable_path = shutil.which(self._executable_name_)
+        # ensure executables on PATH
+        executable_paths = [shutil.which(name) for name in self._executable_names_]
 
-        if executable_path is None:
-            netrics.task.log.critical(f"{self._executable_name_} executable not found")
-            return netrics.task.status.file_missing
+        for (executable_name, executable_path) in zip(self._executable_names_, executable_paths):
+            if executable_path is None:
+                netrics.task.log.critical(f"{executable_name} executable not found")
+                return netrics.task.status.file_missing
 
-        return self.__wrapped__(executable_path, *args, **kwargs)
+        return self.__wrapped__(*executable_paths, *args, **kwargs)
 
 
 class require_exec:
     """Decorator constructor to wrap a callable such that it first
-    checks that the named system executable is accessible via `PATH`.
+    checks that the named system executable(s) are accessible on `PATH`.
 
     """
-    def __init__(self, name):
-        self.executable_name = name
+    def __init__(self, *names):
+        self.executable_names = names
 
     def __call__(self, func):
-        return ExecTask(self.executable_name, func)
+        return ExecTask(func, self.executable_names)
