@@ -5,6 +5,9 @@ hops:
     destinations:
       www.google.com: google
 
+# hops-scamper:
+#   schedule: "H/5 * * * *"
+
 lml:
   command: lml-traceroute
   schedule: "H/5 * * * *"
