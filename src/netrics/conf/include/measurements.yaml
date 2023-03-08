@@ -1,22 +1,27 @@
 hops:
   command: hops-traceroute
   schedule: "H/5 * * * *"
+  unless: &scamper-on |
+    env.NETRICS_BETA_SCAMPER | default('0') | int == 1
   param:
     destinations:
       www.google.com: google
 
-# hops-scamper:
-#   schedule: "H/5 * * * *"
+hops-scamper:
+  schedule: "H/5 * * * *"
+  if: *scamper-on
 
 lml:
   command: lml-traceroute
   schedule: "H/5 * * * *"
+  unless: *scamper-on
   param:
     destinations:
       1.1.1.1: Cloudflare_DNS
 
-# lml-scamper:
-#   schedule: "H/5 * * * *"
+lml-scamper:
+  schedule: "H/5 * * * *"
+  if: *scamper-on
 
 ping:
   schedule: "H/5 * * * *"
