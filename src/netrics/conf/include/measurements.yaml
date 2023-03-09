@@ -11,6 +11,10 @@ hops-scamper:
   schedule: "H/5 * * * *"
   if: *scamper-on
 
+ip:
+  schedule: "H/5 * * * *"
+  unless: env.NETRICS_IP_QUERY | default('1') | int == 0
+
 lml:
   command: lml-traceroute
   schedule: "H/5 * * * *"
