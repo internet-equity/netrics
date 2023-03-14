@@ -6,7 +6,7 @@ import subprocess
 from schema import Optional
 
 from netrics import task
-from netrics.util.iteration import sequence
+from netrics.util.iterutils import sequence
 
 from .common import (
     AddressLookups,
