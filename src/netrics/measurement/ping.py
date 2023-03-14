@@ -5,6 +5,7 @@ from collections import defaultdict
 from schema import Optional
 
 from netrics import task
+from netrics.util import procutils
 
 from .common import default, output, require_lan
 
@@ -69,8 +70,8 @@ def main(params):
 
     """
     # parallelize pings
-    processes = {
-        destination: subprocess.Popen(
+    pool = [
+        subprocess.Popen(
             (
                 'ping',
                 '-c', params.count,
@@ -82,37 +83,39 @@ def main(params):
             stderr=subprocess.PIPE,
             text=True,
         ) for destination in params.destinations
-    }
-
-    # wait and collect outputs
-    outputs = {destination: process.communicate() for (destination, process) in processes.items()}
-
-    # check for exceptions
-    failures = [
-        (destination, process, outputs[destination])
-        for (destination, process) in processes.items()
-        if process.returncode not in PING_CODES
     ]
 
-    if failures:
-        total_failures = len(failures)
+    # wait and map to completed processes
+    processes = {
+        destination: procutils.complete(process)
+        for (destination, process) in zip(params.destinations, pool)
+    }
 
-        # directly log first 3 failures
-        for (fail_count, (destination, process, (stdout, stderr))) in enumerate(failures[:3], 1):
+    # check for exceptions
+    failures = [(destination, process) for (destination, process) in processes.items()
+                if process.returncode not in PING_CODES]
+
+    if failures:
+        fail_total = len(failures)
+
+        # directly log first few failures
+        some_failures = failures[:3]
+
+        for (fail_count, (destination, process)) in enumerate(some_failures, 1):
             task.log.critical(
                 dest=destination,
                 status=f'Error ({process.returncode})',
-                failure=f"({fail_count}/{total_failures})",
-                args=process.args[:-1],
-                stdout=stdout,
-                stderr=stderr,
+                failure=f"({fail_count}/{fail_total})",
+                args=process.args,
+                stdout=process.stdout,
+                stderr=process.stderr,
             )
 
-        if fail_count < total_failures:
+        if fail_count < fail_total:
             task.log.critical(
                 dest='...',
                 status='Error (...)',
-                failure=f"(.../{total_failures})",
+                failure=f"(.../{fail_total})",
                 args='...',
                 stdout='...',
                 stderr='...',
@@ -129,8 +132,8 @@ def main(params):
 
     # parse detailed results
     results = {
-        destination: output.parse_ping(stdout)
-        for (destination, (stdout, _stderr)) in outputs.items()
+        destination: output.parse_ping(process.stdout)
+        for (destination, process) in processes.items()
     }
 
     # label results
