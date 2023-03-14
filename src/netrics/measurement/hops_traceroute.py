@@ -6,7 +6,10 @@ import typing
 from schema import Optional
 
 from netrics import task
-from netrics.util.iterutils import sequence
+from netrics.util import (
+    iterutils,
+    procutils,
+)
 
 from .common import (
     default,
@@ -56,8 +59,8 @@ def main(traceroute, params):
 
     """
     # parallelize traceroutes
-    processes = {
-        destination: subprocess.Popen(
+    pool = [
+        subprocess.Popen(
             (
                 traceroute,
                 '--max-hop', params.max_hop,
@@ -69,36 +72,37 @@ def main(traceroute, params):
             stderr=subprocess.PIPE,
             text=True,
         ) for destination in params.destinations
-    }
+    ]
 
-    # wait and collect outputs
-    outputs = {destination: process.communicate() for (destination, process) in processes.items()}
+    # wait and map to completed processes
+    processes = {
+        destination: procutils.complete(process)
+        for (destination, process) in zip(params.destinations, pool)
+    }
 
     # parse results
     hop_results = [
         HopResult.extract(
             destination,
             process,
-            *outputs[destination],
         )
         for (destination, process) in processes.items()
     ]
 
     # check for exceptions
-    (successes, failures) = sequence(operator.attrgetter('hops'), hop_results)
+    (successes, failures) = iterutils.sequence(operator.attrgetter('hops'), hop_results)
 
     fail_total = len(failures)
 
     for (fail_count, hop_result) in enumerate(failures, 1):
         process = processes[hop_result.dest]
-        (stdout, stderr) = outputs[hop_result.dest]
 
         task.log.error(
             dest=hop_result.dest,
             status=f'Error ({process.returncode})',
             failure=f"({fail_count}/{fail_total})",
-            stdout=stdout,
-            stderr=stderr,
+            stdout=process.stdout,
+            stderr=process.stderr,
         )
 
     if not successes:
@@ -143,11 +147,11 @@ class HopResult(typing.NamedTuple):
     hops: typing.Optional[int]
 
     @classmethod
-    def extract(cls, dest, process, stdout, stderr):
+    def extract(cls, destination, process):
         """Construct object from traceroute result."""
         if process.returncode == 0:
             try:
-                (*_earlier_lines, last_line) = stdout.splitlines()
+                (*_earlier_lines, last_line) = process.stdout.splitlines()
 
                 (hop_count, _line_remainder) = last_line.strip().split(' ', 1)
 
@@ -164,6 +168,6 @@ class HopResult(typing.NamedTuple):
                 #
                 pass
             else:
-                return cls(dest, hop_int)
+                return cls(destination, hop_int)
 
-        return cls(dest, None)
+        return cls(destination, None)
