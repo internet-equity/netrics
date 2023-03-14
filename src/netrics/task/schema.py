@@ -14,7 +14,7 @@ from schema import (
 )
 
 import netrics
-from netrics.util import lazy
+from netrics.util import lazy_validation
 
 
 #
@@ -161,7 +161,7 @@ def get_default(label):
     # Schema will invoke these promised defaults, and thereby trigger
     # their own schema validations.
     #
-    defaults = lazy.LazyValidator(RESULT_META_DEFAULTS, default_conf)
+    defaults = lazy_validation.LazyValidator(RESULT_META_DEFAULTS, default_conf)
 
     # the below are all *callable promises* for our defaults
     default_flat = defaults['flat']
