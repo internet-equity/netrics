@@ -3,6 +3,7 @@ defaults to task input parameters.
 
 """
 import collections.abc
+import ipaddress
 from numbers import Real
 
 from schema import (
@@ -28,17 +29,38 @@ def DestinationList(name='destinations'):
     return And(
         [Text],
         lambda dests: len(dests) == len(set(dests)),
-        error=f"{name}: must be a non-repeating list of network locators",
+        error=(name and f"{name}: must be a non-repeating list of network locators"),
     )
 
 
 def DestinationCollection(name='destinations'):
     return Or(
         {Text: Text},
-        DestinationList(name),
+        DestinationList(None),
         error=f"{name}: must be non-repeating list "
               "of network locators or mapping of these "
               "to their result labels",
+    )
+
+
+def valid_ip(value):
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def IPAddress(name):
+    return Schema(valid_ip, error=f'{name}: must be an IPv4 or IPv6 address: {{}}')
+
+
+def HostnameList(name='destinations'):
+    return And(
+        DestinationList(None),
+        [lambda value: not valid_ip(value)],
+        error=f'{name}: must be a non-repeating list of hostnames',
     )
 
 
