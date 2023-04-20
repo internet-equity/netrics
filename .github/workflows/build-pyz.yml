@@ -1,0 +1,14 @@
+name: Build PYZ distribution
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.1.1
+    with:
+      app-main: netrics
+      app-alts: netrics.+
+      app-solo: false
