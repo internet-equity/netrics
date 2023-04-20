@@ -21,6 +21,7 @@ def write(results, /, label=None, annotate=True, **kwargs):
             'Measurements': results,
             'Meta': {
                 'Time': time.time(),
+                'Id': None,
             },
         }
 
