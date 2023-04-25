@@ -62,10 +62,17 @@ def main(traceroute, params):
     pool = [
         subprocess.Popen(
             (
+                #
+                # versions of traceroute differ on their long options and how
+                # they like them to be specified.
+                #
+                # we'll stick to short options which are consistent across
+                # versions and which may be specified as below.
+                #
                 traceroute,
-                '--max-hop', params.max_hop,
-                '--tries', params.tries,
-                '--wait', params.wait,
+                '-m', params.max_hop,
+                '-q', params.tries,
+                '-w', params.wait,
                 destination,
             ),
             stdout=subprocess.PIPE,
