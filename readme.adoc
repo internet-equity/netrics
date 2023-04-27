@@ -13,7 +13,27 @@ endif::[]
 
 The network measurements execution framework.
 
-TODO: Objectives/justifications; features; installation and quick start-up....
+Netrics streamlines the development, debugging, distribution and periodic execution of tasks – specifically supporting the execution of computer network measurements.
+
+This software is both a framework and a bundle: Netrics is distributed with built-in, research-backed measurements, _and_ the installed software may be trivially configured and extended.
+
+The project aims to support network researchers, engineers, providers and users.
+
+Features:
+
+* Configuration for Humans: in either YAML or TOML formats
+* Measurements built in: Provide your own measurements or hit the ground running with built-in, pre-configured measurements developed by the Internet Equity Initiative at the University of Chicago
+* Open, operating system-level interfaces: measurements are implemented as arbitrary executables reading structured standard input parameters, writing structured standard output results, _etc_.
+* Diverse installation targets: support for _*nix_ devices featuring Python version 3.8 or later, via pip or via all-in-one pre-built bundles
+* Debugging tools: command-line utilities to test and debug measurement executables – on your laptop or on your Raspberry Pi
+* Python SDK: simple tools to help in the implementation of measurements in Python (and serving as prototypes for their implementation in other languages)
+
+[TIP]
+====
+Not interested in network measurements?
+
+Netrics is itself a distribution of https://github.com/chicago-cdac/fate[Fate], a general-purpose, feature-rich scheduler for periodic tasks.
+====
 
 == Installation
 
@@ -21,7 +41,11 @@ TODO: Objectives/justifications; features; installation and quick start-up....
 
 NOTE: Netrics is not yet available to install via operating system package managers.
 
-=== pip[x]
+=== One-line installer
+
+NOTE: Coming soon!
+
+=== Pre-built bundle
 
 Netrics software is implemented in https://python.org/[Python] and requires Python version 3.8 or above.
 
@@ -31,6 +55,23 @@ Casual inspection of your system's `/usr/bin/` directory may indicate which vers
 ----
 ls -1 /usr/bin/python3.*
 ----
+
+Python installed? Great. That's all the pre-built bundle needs.
+
+Find the appropriate build for your system on the https://github.com/internet-equity/netrics/releases/latest[Netrics release announcement page].
+
+For example, the below package includes the Netrics software bundle version `0.0.1-rc.9`, and all its CLI commands, pre-built for the ARM CPU architecture (`aarch64`) and Python version 3.8 (`py38`):
+
+    netrics-all-0.0.1-rc.9-py38-aarch64.zip
+
+Having downloaded the above ZIP file, installation is as simple as the following:
+
+[source,console]
+----
+sudo unzip netrics-all-0.0.1-rc.9-py38-aarch64.zip -d /usr/local/bin
+----
+
+=== pip[x]
 
 With Python installed, the Package Installer for Python – `pip` – should be installed, as well. If not, it may be installed with the following:
 
