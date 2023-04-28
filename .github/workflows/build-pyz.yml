@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.2.1
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.3.0
     with:
       app-main: netrics
       app-alts: netrics.+
