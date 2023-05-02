@@ -71,6 +71,31 @@ Having downloaded the above ZIP file, installation is as simple as the following
 sudo unzip netrics-all-0.0.1-rc.9-py38-aarch64.zip -d /usr/local/bin
 ----
 
+Alternatively, install Netrics to any directory from which you'd like to execute it, or to any writeable directory on your PATH, _e.g._:
+
+[source,console]
+----
+unzip netrics-all-0.0.1-rc.9-py38-aarch64.zip -d ~/.local/bin
+----
+
+[TIP]
+====
+If you're into that kind of thing, a (multi)-line no-brainer – making use of the TAR file alternative – might look like the following:
+
+[source,sh]
+----
+ARCH=$(arch)
+
+PYTHON=py$(python3 -c "import sys; print(*sys.version_info[:2], sep='')")
+
+NETRICS=$(curl -s https://api.github.com/repos/internet-equity/netrics/releases/latest | jq -r .tag_name)
+
+curl -sL https://github.com/internet-equity/netrics/releases/$NETRICS/download/netrics-all-$NETRICS-$PYTHON-$ARCH.tar | sudo tar -xf - -C /usr/local/bin/
+----
+
+…But, why not use the <<One-line installer,one-line installer>>, instead?
+====
+
 === pip[x]
 
 With Python installed, the Package Installer for Python – `pip` – should be installed, as well. If not, it may be installed with the following:
@@ -104,6 +129,7 @@ pipx install [URI]
 
 With `pipx` installed, the above command alone will create a virtual environment and install Netrics into it, such that the library is available to your user, (and without `root` access).
 
+Finally, consider one of the preceding installation methods, such as the <<One-line installer,one-line installer>>, which will attempt to install Netrics as a <<Pre-built bundle,pre-built, pre-packaged bundle>>, without risking the above concerns.
 ====
 
 ==== PyPI
@@ -156,9 +182,9 @@ The report printed by the above should include the line: `Status: OK (Exit code 
 
 == Initialization
 
-Outside of <<package-managers,installation by a package manager>>, initialization is suggested to set up your Netrics installation.
+Outside of <<package-managers,installation by a package manager>> or by <<One-line installer,the one-line installer>>, initialization is suggested to set up your Netrics installation.
 
-<<PyPI>> and <<source,source>> distributions feature the `netrics` sub-command `init`:
+<<Pre-built bundle>>, <<PyPI>> and <<source,source>> distributions feature the `netrics` sub-command `init`:
 
 [source,sh]
 ----
