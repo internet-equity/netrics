@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.4.7
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.5.0
     permissions:
       contents: write
     with:
