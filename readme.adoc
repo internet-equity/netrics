@@ -43,7 +43,35 @@ NOTE: Netrics is not yet available to install via operating system package manag
 
 === One-line installer
 
-NOTE: Coming soon!
+The "one-line" installation script is the recommended method for _most_ humans to get started with Netrics.
+
+The script will download and unpack the <<Pre-built bundle,pre-built bundle>> appropriate to your system, as well as perform the software's <<Initialization,initialization>>.
+
+As a one-liner:
+
+[source,sh]
+----
+curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.11/install.py | python3
+----
+
+[TIP]
+====
+You may pass arguments to the installer – even in the above form – separated from the Python executable with a single dash:
+
+[source,sh]
+----
+curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.11/install.py | python3 - --help
+----
+====
+
+Alternatively, download the installer to interact with it:
+
+[source,console]
+----
+curl -LO https://github.com/internet-equity/netrics/raw/0.0.1-rc.11/install.py
+
+python3 install.py --help
+----
 
 === Pre-built bundle
 
