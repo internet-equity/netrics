@@ -47,11 +47,18 @@ The "one-line" installation script is the recommended method for _most_ humans t
 
 The script will download and unpack the <<Pre-built bundle,pre-built bundle>> appropriate to your system, as well as perform the software's <<Initialization,initialization>>.
 
-As a one-liner:
+The one-liner below will install Netrics for the current user:
 
 [source,sh]
 ----
-curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | python3
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | python3
+----
+
+To install Netrics system-wide you might use `sudo`:
+
+[source,sh]
+----
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | sudo python3
 ----
 
 [TIP]
@@ -60,7 +67,7 @@ You may pass arguments to the installer – even in the above form – separated
 
 [source,sh]
 ----
-curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | python3 - --help
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | python3 - --help
 ----
 ====
 
