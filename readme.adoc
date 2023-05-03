@@ -51,7 +51,7 @@ As a one-liner:
 
 [source,sh]
 ----
-curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.11/install.py | python3
+curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | python3
 ----
 
 [TIP]
@@ -60,7 +60,7 @@ You may pass arguments to the installer – even in the above form – separated
 
 [source,sh]
 ----
-curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.11/install.py | python3 - --help
+curl -L https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py | python3 - --help
 ----
 ====
 
@@ -68,7 +68,7 @@ Alternatively, download the installer to interact with it:
 
 [source,console]
 ----
-curl -LO https://github.com/internet-equity/netrics/raw/0.0.1-rc.11/install.py
+curl -LO https://github.com/internet-equity/netrics/raw/0.0.1-rc.12/install.py
 
 python3 install.py --help
 ----
