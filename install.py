@@ -357,7 +357,7 @@ def main(args=None):
     if (app_version := load_release_name(namespace.pre)) is None:
         parser.error('no releases available' + ('!' if namespace.pre else ' (try --pre)'))
 
-    arch = platform.processor()
+    arch = platform.processor() or platform.machine()
 
     print(style_title(f'{APP_NAME} installation'), end='\n\n')
 
