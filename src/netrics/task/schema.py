@@ -4,6 +4,7 @@ defaults to task input parameters.
 """
 import collections.abc
 import ipaddress
+import shutil
 from numbers import Real
 
 from schema import (
@@ -11,6 +12,7 @@ from schema import (
     Optional,
     Or,
     Schema,
+    SchemaError,
     Use,
 )
 
@@ -64,9 +66,21 @@ def HostnameList(name='destinations'):
     )
 
 
+def falsey(value):
+    return not value
+
+
+def gt_zero(value):
+    return value > 0
+
+
+def gte_zero(value):
+    return value >= 0
+
+
 def NaturalNumber(name):
     return And(int,
-               lambda value: value > 0,
+               gt_zero,
                error=f"{name}: int must be greater than 0")
 
 
@@ -77,7 +91,7 @@ def NaturalStr(name):
 
 def PositiveInt(name, unit):
     return And(int,
-               lambda value: value >= 0,
+               gte_zero,
                error=f"{name}: int {unit} must not be less than 0")
 
 
@@ -86,15 +100,39 @@ def PositiveIntStr(name, unit):
                Use(str))
 
 
-def BoundedReal(name, message, boundary):
+def BoundedReal(boundary, message=None):
     return And(Real,
                boundary,
-               error=f"{name}: {message}")
+               error=message)
 
 
 def BoundedRealStr(*args, **kwargs):
     return And(BoundedReal(*args, **kwargs),
                Use(str))
+
+
+def GTZero(*args, **kwargs):
+    return BoundedReal(gt_zero, *args, **kwargs)
+
+
+def GTEZero(*args, **kwargs):
+    return BoundedReal(gte_zero, *args, **kwargs)
+
+
+class UseCallable(Use):
+
+    def validate(self, value):
+        result = super().validate(value)
+
+        if not result:
+            raise SchemaError(f"{self._callable.__name__}({value!r}) should evaluate to True",
+                              [self._error.format(value) if self._error else None])
+
+        return result
+
+
+def Command(**kwargs):
+    return UseCallable(shutil.which, **kwargs)
 
 
 #
