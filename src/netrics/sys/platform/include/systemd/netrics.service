@@ -1,0 +1,49 @@
+[Unit]
+Description={{ label }} controller service
+
+#
+# Would also make sense to have path files s.t. (re)-loaded IFF these are modified.
+#
+# https://manpages.debian.org/stretch/systemd/systemd.path.5.en.html
+#
+# ConditionPathExistsGlob=…/tasks.*
+# ConditionPathExistsGlob=…/defaults.*
+#
+
+StartLimitIntervalSec=1
+StartLimitBurst=1
+
+
+[Service]
+Environment=PATH="{{ env_path }}"
+
+ExecStart="{{ install_path }}"/netrics.d --foreground
+
+#
+# Eventually:
+#
+# * will want to handle kill gracefully...
+# * ...and hup or whatever to reload configuration
+# * ...and perhaps here can indicate that certain paths (config) are watched for changes to trigger reload
+#
+# Might also set an exec condition that config exists (for generic Fate anyway).
+#
+
+Restart=on-failure
+
+#
+# Might be useful here...
+#
+# ...Or might be annoying with permissions; (perhaps will want to set user in conf instead).
+#
+# User=netrics
+#
+
+
+[Install]
+#
+# Start service based on assignment of (local) IP address
+#
+# (I.e. don't bother with WAN tests if we're not yet connected to LAN.)
+#
+WantedBy=network-online.target
