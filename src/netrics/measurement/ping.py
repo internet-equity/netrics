@@ -44,9 +44,10 @@ PARAMS = task.schema.extend('ping_latency', {
 
     # interval: (ping): int/decimal seconds no less than 2ms
     Optional('interval',
-             default='0.25'): task.schema.BoundedRealStr('interval',
-                                                         'seconds may be no less than 0.002 (2ms)',
-                                                         lambda interval: interval >= 0.002),
+             default='0.25'): task.schema.BoundedRealStr(
+                 lambda interval: interval >= 0.002,
+                 'interval: seconds may be no less than 0.002 (2ms)'
+    ),
 
     # deadline: (ping): positive integer seconds
     Optional('deadline', default='5'): task.schema.PositiveIntStr('deadline', 'seconds'),

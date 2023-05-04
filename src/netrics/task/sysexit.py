@@ -10,3 +10,4 @@ class status(enum.IntEnum):
     os_error = 71
     file_missing = 72
     conf_error = 78
+    timeout = 124

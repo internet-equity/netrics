@@ -4,7 +4,7 @@ import time
 import fate.task.result
 
 
-def write(results, /, label=None, annotate=True, **kwargs):
+def write(results, /, label=None, extend=None, annotate=True, **kwargs):
     """Write task results.
 
     Wraps results in metadata, by default, according to `annotate=True`;
@@ -15,6 +15,9 @@ def write(results, /, label=None, annotate=True, **kwargs):
     """
     if label:
         results = {label: results}
+
+    if extend:
+        results.update(extend)
 
     if annotate:
         results = {

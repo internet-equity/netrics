@@ -68,3 +68,31 @@ ping:
       77.67.119.129: Paris
       195.89.146.193: Stockholm
       190.98.158.1: Sao_Paulo
+
+speed-ookla:
+  #
+  # schedule: hourly
+  #
+  # hashed version: with the above name: every hour on the 49th minute
+  #
+  # schedule: "H * * * *"
+  #
+  # static version: every hour on the 0th minute
+  #
+  # (used in place of hash-based offset for all speed tests to try to ensure
+  # that they test similar conditions. speed tests will NOT collide with any
+  # others thanks to "tenancy" below.)
+  #
+  schedule: "0 * * * *"
+
+  #
+  # scheduling (scheduler)
+  #
+  # disallow concurrent measurements
+  #
+  scheduling:
+    tenancy: 1
+
+  param:
+    accept_license: true
+    timeout: 80
