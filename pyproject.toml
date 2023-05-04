@@ -11,7 +11,7 @@ packages = [{include = "netrics", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fate-scheduler = "0.1.0-rc.11"
+fate-scheduler = "0.1.0-rc.12"
 netifaces = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
