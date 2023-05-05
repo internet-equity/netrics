@@ -2,6 +2,7 @@
 import json
 import re
 import subprocess
+import tempfile
 
 from schema import Optional, Or, Schema
 
@@ -66,39 +67,44 @@ def main(params):
     `label`, (regardless of `result` configuration).
 
     """
-    try:
-        proc = subprocess.run(
-            (
-                params.exec,
-                '--accept-license',
-                '--format', 'json',
-                '--progress', 'no',
-            ),
-            timeout=(params.timeout or None),
-            capture_output=True,
-            text=True,
-            #
-            # Ookla speedtest fails if HOME unset --
-            # as it _may_ be, _e.g._ under Systemd (see #48).
-            #
-            # Explicitly setting HOME empty sidesteps this behavior
-            # (and simply disables its functionality to record license
-            # acceptance to the user's HOME directory).
-            #
-            # (And speedtest apparently, correctly, requires no other
-            # envvars, at least.)
-            #
-            env={'HOME': ''},
-        )
-    except subprocess.TimeoutExpired as exc:
-        task.log.critical(
-            cmd=exc.cmd,
-            elapsed=exc.timeout,
-            stdout=exc.stdout,
-            stderr=exc.stderr,
-            status='timeout',
-        )
-        return task.status.timeout
+    with tempfile.TemporaryDirectory() as tmphome:
+        try:
+            proc = subprocess.run(
+                (
+                    params.exec,
+                    '--accept-license',
+                    '--format', 'json',
+                    '--progress', 'no',
+                ),
+                timeout=(params.timeout or None),
+                capture_output=True,
+                text=True,
+                #
+                # Ookla speedtest fails if HOME variable completely
+                # unset -- as it _may_ be, _e.g._ under Systemd
+                # (see #48).
+                #
+                # All it wants to do is record license-acceptance. This
+                # is inconsequential; however, it cannot be disabled.
+                #
+                # As we can't (or don't want to) ensure a real HOME, and
+                # don't need this record, we'll set it to a temporary
+                # directory.
+                #
+                # (And speedtest apparently, correctly, requires no other
+                # envvars, at least.)
+                #
+                env={'HOME': tmphome},
+            )
+        except subprocess.TimeoutExpired as exc:
+            task.log.critical(
+                cmd=exc.cmd,
+                elapsed=exc.timeout,
+                stdout=exc.stdout,
+                stderr=exc.stderr,
+                status='timeout',
+            )
+            return task.status.timeout
 
     parsed = parse_output(proc.stdout)
 

@@ -51,14 +51,14 @@ The one-liner below will install Netrics for the current user:
 
 [source,sh]
 ----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.16/install.py | python3
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.17/install.py | python3
 ----
 
 To install Netrics system-wide you might use `sudo`:
 
 [source,sh]
 ----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.16/install.py | sudo python3
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.17/install.py | sudo python3
 ----
 
 [TIP]
@@ -67,7 +67,7 @@ You may pass arguments to the installer – even in the above form – separated
 
 [source,sh]
 ----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.16/install.py | python3 - --help
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.17/install.py | python3 - --help
 ----
 ====
 
@@ -75,7 +75,7 @@ Alternatively, download the installer to interact with it:
 
 [source,console]
 ----
-curl -LO https://github.com/internet-equity/netrics/raw/0.0.1-rc.16/install.py
+curl -LO https://github.com/internet-equity/netrics/raw/0.0.1-rc.17/install.py
 
 python3 install.py --help
 ----
