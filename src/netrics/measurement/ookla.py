@@ -1,5 +1,6 @@
 """Measure Internet bandwidth, *etc*., via the Ookla speedtest CLI."""
 import json
+import re
 import subprocess
 
 from schema import Optional, Or, Schema
@@ -26,6 +27,13 @@ PARAMS = task.schema.extend('ookla', {
     'accept_license': Schema(True, error="accept_license: Ookla CLI license must be "
                                          "explicitly accepted by specifying the value True"),
 })
+
+
+LICENSE_PATTERN = re.compile(
+    r'=+\n+You may only use this Speedtest software.+'
+    r'\n+License acceptance recorded.\s+Continuing.\s*',
+    re.DOTALL | re.I
+)
 
 
 @task.param.require(PARAMS)
@@ -69,6 +77,18 @@ def main(params):
             timeout=(params.timeout or None),
             capture_output=True,
             text=True,
+            #
+            # Ookla speedtest fails if HOME unset --
+            # as it _may_ be, _e.g._ under Systemd (see #48).
+            #
+            # Explicitly setting HOME empty sidesteps this behavior
+            # (and simply disables its functionality to record license
+            # acceptance to the user's HOME directory).
+            #
+            # (And speedtest apparently, correctly, requires no other
+            # envvars, at least.)
+            #
+            env={'HOME': ''},
         )
     except subprocess.TimeoutExpired as exc:
         task.log.critical(
@@ -91,7 +111,7 @@ def main(params):
         )
         return task.status.no_host
 
-    if proc.stderr:
+    if proc.stderr and not LICENSE_PATTERN.fullmatch(proc.stderr):
         task.log.error(
             status=f'Error ({proc.returncode})',
             stdout=proc.stdout,
