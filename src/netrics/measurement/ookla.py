@@ -1,5 +1,6 @@
 """Measure Internet bandwidth, *etc*., via the Ookla speedtest CLI."""
 import json
+import os
 import re
 import subprocess
 import tempfile
@@ -88,13 +89,10 @@ def main(params):
                 # is inconsequential; however, it cannot be disabled.
                 #
                 # As we can't (or don't want to) ensure a real HOME, and
-                # don't need this record, we'll set it to a temporary
-                # directory.
+                # don't need this record, we'll allow it to fall back to
+                # a temporary directory.
                 #
-                # (And speedtest apparently, correctly, requires no other
-                # envvars, at least.)
-                #
-                env={'HOME': tmphome},
+                env={'HOME': tmphome, **os.environ},
             )
         except subprocess.TimeoutExpired as exc:
             task.log.critical(
