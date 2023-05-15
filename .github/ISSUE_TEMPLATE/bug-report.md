@@ -1,6 +1,6 @@
 ---
-name: Netrics Data Bug Report
-about: An issue template for reporting bugs or other quality issues with the Netrics data.
+name: Netrics Bug Report
+about: An issue template for reporting bugs or other quality issues with the Netrics software.
 title: ''
 labels: 'bug'
 assignees: ''

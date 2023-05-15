@@ -1,6 +1,6 @@
 ---
-name: Netrics Data Feature Request
-about: An issue template for requesting new features for Netrics data.
+name: Netrics Feature Request
+about: An issue template for requesting new features for Netrics software.
 title: ''
 labels: 'feature-request'
 assignees: ''

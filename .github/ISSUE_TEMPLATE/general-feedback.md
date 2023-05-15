@@ -1,6 +1,6 @@
 ---
-name: Netrics Data General Feedback
-about: An issue template for submitting general feedback on Netrics data.
+name: Netrics General Feedback
+about: An issue template for submitting general feedback on Netrics software.
 title: ''
 labels: 'general-feedback'
 assignees: ''
@@ -15,11 +15,11 @@ assignees: ''
 
 **Feedback**:
 
-[Provide a clear and concise description of your feedback. This can include suggestions, ideas, concerns, or any other input you have regarding the data.]
+[Provide a clear and concise description of your feedback. This can include suggestions, ideas, concerns, or any other input you have regarding the software.]
 
 **Impact**:
 
-[Explain the potential impact or benefits of your feedback, whether it addresses a specific issue, improves usability, enhances performance, or contributes to the overall dataset.]
+[Explain the potential impact or benefits of your feedback, whether it addresses a specific issue, improves usability, enhances performance, or contributes to the overall software.]
 
 **Additional Information**:
 
