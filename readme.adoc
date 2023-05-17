@@ -37,6 +37,11 @@ Netrics is itself a distribution of https://github.com/chicago-cdac/fate[Fate], 
 
 == Installation
 
+[TIP]
+====
+You can install and demo Netrics software with Docker. Follow our [guide on the netrics-docker GitHub repository](https://github.com/internet-equity/netrics-docker/tree/main) to get started.
+====
+
 === Package managers
 
 NOTE: Netrics is not yet available to install via operating system package managers.
