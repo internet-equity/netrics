@@ -22,7 +22,7 @@ The project aims to support network researchers, engineers, providers and users.
 Features:
 
 * Configuration for Humans: in either YAML or TOML formats
-* Measurements built in: Provide your own measurements or hit the ground running with built-in, pre-configured measurements developed by the Internet Equity Initiative at the University of Chicago
+* Measurements built in: Provide your own measurements or hit the ground running with built-in, pre-configured measurements from Ookla, Measurement Lab, iPerf, and more
 * Open, operating system-level interfaces: measurements are implemented as arbitrary executables reading structured standard input parameters, writing structured standard output results, _etc_.
 * Diverse installation targets: support for _*nix_ devices featuring Python version 3.8 or later, via pip or via all-in-one pre-built bundles
 * Debugging tools: command-line utilities to test and debug measurement executables – on your laptop or on your Raspberry Pi
