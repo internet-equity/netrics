@@ -505,15 +505,15 @@ Any task configuration may specify the `command` setting with the value `ping` t
 |...
 |...
 
-|`ndt7`
-|`netrics-ndt7`
+|`speed-ndt7`
+|`netrics-speed-ndt7`
 |...
-|...
+|Run a network diagnostic test using Measurement Lab's ndt7-client.
 
-|`ookla`
-|`netrics-ookla`
+|`speed-ookla`
+|`netrics-speed-ookla`
 |...
-|...
+|Run a network diagnostic test using Ookla's Speedtest.
 
 |`ping`
 |`netrics-ping`
