@@ -70,27 +70,39 @@ ping:
       190.98.158.1: Sao_Paulo
 
 speed-ookla:
-  #
-  # schedule: hourly
-  #
-  # hashed version: with the above name: every hour on the 49th minute
-  #
-  # schedule: "H * * * *"
-  #
-  # static version: every hour on the 0th minute
-  #
-  # (used in place of hash-based offset for all speed tests to try to ensure
-  # that they test similar conditions. speed tests will NOT collide with any
-  # others thanks to "tenancy" below.)
-  #
-  schedule: "0 * * * *"
+  schedule:
+    #
+    # Hourly.
+    #
+    # We use "U" such that the minute past the hour is chosen for us based on a
+    # hash of *both* the "hash" value (as with "H") *and* a device-UNIQUE value
+    # (generally a MAC address).
+    #
+    expression: "U * * * *"
+    #
+    # We specify the below value to hash such that other speed tests, which we
+    # want to *coincide* with this one, may do the same to receive the same
+    # offset/jitter, (rather than an arbitrary offset based on a hash of their
+    # name).
+    #
+    hash: speed
+    #
+    # I.e.:
+    #
+    # * we want each device's speed tests to enqueue at the same time such that
+    #   they test similar network conditions
+    #
+    # * we want that time to be selected for us such that different devices may
+    #   enqueue their speed tests at different times
+    #
+    # (Note that each device's speed tests will *not* collide -- will not
+    # *execute* at the same time -- thanks to "tenancy" below.)
+    #
 
-  #
-  # scheduling (scheduler)
-  #
-  # disallow concurrent measurements
-  #
   scheduling:
+    #
+    # Disallow concurrent measurements.
+    #
     tenancy: 1
 
   param:
