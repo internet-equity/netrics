@@ -69,7 +69,7 @@ ping:
       195.89.146.193: Stockholm
       190.98.158.1: Sao_Paulo
 
-speed-ookla:
+speed-ndt7: &speed-conf
   schedule:
     #
     # Hourly.
@@ -104,6 +104,12 @@ speed-ookla:
     # Disallow concurrent measurements.
     #
     tenancy: 1
+
+speed-ookla:
+  #
+  # See: speed-ndt7
+  #
+  << : *speed-conf
 
   param:
     accept_license: true
