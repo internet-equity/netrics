@@ -52,28 +52,18 @@ The "one-line" installation script is the recommended method for _most_ humans t
 
 The script will download and unpack the <<Pre-built bundle,pre-built bundle>> appropriate to your system, as well as perform the software's <<Initialization,initialization>>.
 
-[IMPORTANT]
-====
-While Netrics is in beta, the installation argument `--pre` must be appended to the below. For example:
-
-[source,sh]
-----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.18/install.py | python3 - --pre
-----
-====
-
 The one-liner below will install Netrics for the current user:
 
 [source,sh]
 ----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.18/install.py | python3
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1/install.py | python3
 ----
 
 To install Netrics system-wide you might use `sudo`:
 
 [source,sh]
 ----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.18/install.py | sudo python3
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1/install.py | sudo python3
 ----
 
 [TIP]
@@ -82,7 +72,7 @@ You may pass arguments to the installer – even in the above form – separated
 
 [source,sh]
 ----
-curl -sL https://github.com/internet-equity/netrics/raw/0.0.1-rc.18/install.py | python3 - --help
+curl -sL https://github.com/internet-equity/netrics/raw/0.0.1/install.py | python3 - --help
 ----
 
 And, for example, if the installer cannot find a suitable location for the Netrics executables – one which is both writeable by the current user and on the `PATH` of the current user – then specification of the installation path argument is **required**.
@@ -92,7 +82,7 @@ Alternatively, download the installer to interact with it:
 
 [source,sh]
 ----
-curl -LO https://github.com/internet-equity/netrics/raw/0.0.1-rc.18/install.py
+curl -LO https://github.com/internet-equity/netrics/raw/0.0.1/install.py
 
 python3 install.py --help
 ----
@@ -112,22 +102,22 @@ Python installed? Great. That's all the pre-built bundle needs.
 
 Find the appropriate build for your system on the https://github.com/internet-equity/netrics/releases/latest[Netrics release announcement page].
 
-For example, the below package includes the Netrics software bundle version `0.0.1-rc.9`, and all its CLI commands, pre-built for the ARM CPU architecture (`aarch64`) and Python version 3.8 (`py38`):
+For example, the below package includes the Netrics software bundle version `0.0.1`, and all its CLI commands, pre-built for the ARM CPU architecture (`aarch64`) and Python version 3.8 (`py38`):
 
-    netrics-all-0.0.1-rc.9-py38-aarch64.zip
+    netrics-all-0.0.1-py38-aarch64.zip
 
 Having downloaded the above ZIP file, installation is as simple as the following:
 
 [source,sh]
 ----
-sudo unzip netrics-all-0.0.1-rc.9-py38-aarch64.zip -d /usr/local/bin
+sudo unzip netrics-all-0.0.1-py38-aarch64.zip -d /usr/local/bin
 ----
 
 Alternatively, install Netrics to any directory from which you'd like to execute it, or to any writeable directory on your PATH, _e.g._:
 
 [source,sh]
 ----
-unzip netrics-all-0.0.1-rc.9-py38-aarch64.zip -d ~/.local/bin
+unzip netrics-all-0.0.1-py38-aarch64.zip -d ~/.local/bin
 ----
 
 [TIP]
