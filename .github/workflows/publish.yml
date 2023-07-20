@@ -1,0 +1,45 @@
+#
+# Set version, tag & publish
+#
+name: Publish
+
+run-name: "Publish: ${{ inputs.version }}: ${{ github.ref_name }}@${{ github.sha }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: novel library version and repository tag to apply (e.g. 1.0.2-post5)
+        required: true
+      force-version:
+        description: omit check for semantic versioning
+        type: boolean
+        required: false
+      draft:
+        description: draft but do not publish release
+        type: boolean
+        required: false
+      prerelease:
+        description: mark as a prerelease
+        type: boolean
+        required: false
+      pypi-test:
+        description: publish to test.pypi.org
+        type: boolean
+        required: false
+
+jobs:
+  delegate:
+    uses: internet-equity/fate/.github/workflows/publish.yml@main
+    permissions:
+      contents: write
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
+    with:
+      version: ${{ inputs.version }}
+      force-version: ${{ inputs.force-version }}
+      force-pass: true
+      draft: ${{ inputs.draft }}
+      prerelease: ${{ inputs.prerelease }}
+      pypi-test: ${{ inputs.pypi-test }}
