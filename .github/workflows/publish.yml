@@ -30,7 +30,7 @@ on:
 
 jobs:
   delegate:
-    uses: internet-equity/fate/.github/workflows/publish.yml@main
+    uses: internet-equity/fate/.github/workflows/publish.yml@1fa15f362fb18fe4636d57788755a60f6713aa61
     permissions:
       contents: write
     secrets:
