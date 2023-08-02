@@ -1,0 +1,45 @@
+name: Build Docker image
+
+on:
+  workflow_run:
+    workflows:
+      - build pyz distribution
+    types:
+      - completed
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check success
+        env:
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          if [ "$CONCLUSION" = success ]
+          then
+            echo "pyz build was successful"
+            exit 0
+          else
+            echo "::error::pyz build was not successful"
+            exit 1
+          fi
+
+  build-push:
+    runs-on: ubuntu-latest
+
+    needs: [setup]
+
+    permissions:
+      contents: read
+      packages: write
+
+#     strategy:
+#       matrix:
+#         base-image:
+#           - name: ${{ inputs.version }}-bookworm-py311
+#             tags: |
+#               ...
+
+    steps:
+      - run: echo '${{ toJSON(github.event.workflow_run) }}'
