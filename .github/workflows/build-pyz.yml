@@ -1,16 +1,83 @@
 name: Build PYZ distribution
 
+run-name: "Build PYZ distribution: ${{ github.event.release.tag_name || github.event.workflow_run.display_title }}"
+
 on:
   release:
     types:
       - published
 
+  workflow_run:
+    workflows:
+      - publish
+    types:
+      - completed
+
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    if: github.event.workflow_run
+
+    outputs:
+      release-sha: ${{ steps.head.outputs.release-sha }}
+
+    steps:
+      - name: Check success
+        env:
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          if [ "$CONCLUSION" = success ]
+          then
+            echo "publish was successful"
+            exit 0
+          else
+            echo "::error::publish was not successful"
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          # fetch enough that we should feasibly be able to find this changeset
+          # and its subsequent tag commit (but without fetching *everything*)
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 100
+
+      - name: Determine HEAD
+        id: head
+        env:
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          HEAD="$(git log --format=%H ${RUN_SHA}.. | tail -n 1)"
+
+          if [ -z "$HEAD" ]
+          then
+            echo "::error::could not find publish workflow changeset following ${RUN_SHA:0:9}"
+            exit 1
+          fi
+
+          # Though we've fetched plenty of *commits* above, we can't rely on having all *tags*
+          # So instead we'll query the remote.
+          TAGS="$(git ls-remote --tags --refs --quiet | grep -E "^${HEAD}\s+" | awk '{print $2}' | awk -F / '{print $3}')"
+
+          if [ -z "$TAGS" ]
+          then
+            echo "::error::changeset following ${RUN_SHA:0:9} does not appear to be tagged release: ${HEAD:0:9}"
+            exit 1
+          fi
+
+          echo "publish workflow release SHA: $HEAD:" $TAGS
+
+          echo "release-sha=$HEAD" >> $GITHUB_OUTPUT
+
   build:
-    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.5.0
+    needs: [setup]
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.5
     permissions:
       contents: write
     with:
       app-main: netrics
       app-alts: netrics.+
       app-solo: false
+      head-sha: ${{ needs.setup.outputs.release-sha }}
