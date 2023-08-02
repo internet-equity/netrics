@@ -1,6 +1,6 @@
 name: Build PYZ distribution
 
-run-name: "Build PYZ distribution: ${{ github.event.release.tag_name || github.event.workflow_run.display_title }}"
+run-name: ${{ github.event.release.tag_name || github.event.workflow_run.display_title }}
 
 on:
   release:
@@ -71,9 +71,9 @@ jobs:
 
           echo "release-sha=$HEAD" >> $GITHUB_OUTPUT
 
-  build:
+  delegate:
     needs: [setup]
-    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.5
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.6
     permissions:
       contents: write
     with:

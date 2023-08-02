@@ -1,0 +1,124 @@
+name: Build Docker image
+
+run-name: ${{ github.event.workflow_run.display_title }}
+
+on:
+  workflow_run:
+    workflows:
+      - build pyz distribution
+    types:
+      - completed
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    outputs:
+      release-tag: ${{ steps.tag.outputs.release-tag }}
+
+    steps:
+      - name: Check success
+        env:
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          if [ "$CONCLUSION" != success ]
+          then
+            echo "::error::pyz build was not successful"
+            exit 1
+          fi
+
+          echo "pyz build was successful"
+
+      - name: Download manifest
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_ID: ${{ github.event.workflow_run.id }}
+        run: gh run download $TRIGGER_ID -n manifest
+
+      - name: Determine release name
+        id: tag
+        run: |
+          RELEASE_NAME="$(jq -r .release_name < ./manifest.json)"
+
+          if [ -z "$RELEASE_NAME" ]
+          then
+            echo "::error:release name could not be determined"
+            exit 1
+          fi
+
+          echo "release-tag=$RELEASE_NAME" >> $GITHUB_OUTPUT
+
+          echo "release name: $RELEASE_NAME"
+
+  build-push:
+    runs-on: ubuntu-latest
+
+    needs: [setup]
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        image:
+          - builder_name: 0.0.1-bookworm-py311
+            tags: |
+              ghcr.io/${{ github.repository }}:latest
+              ghcr.io/${{ github.repository }}:bookworm
+              ghcr.io/${{ github.repository }}:py311
+              ghcr.io/${{ github.repository }}:bookworm-py311
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-bookworm
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-py311
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-bookworm-py311
+
+          - builder_name: 0.0.1-slim-py311
+            tags: |
+              ghcr.io/${{ github.repository }}:slim
+              ghcr.io/${{ github.repository }}:slim-bookworm
+              ghcr.io/${{ github.repository }}:slim-py311
+              ghcr.io/${{ github.repository }}:slim-bookworm-py311
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-slim
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-slim-bookworm
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-slim-py311
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-slim-bookworm-py311
+
+          - builder_name: 0.0.1-jammy-py310
+            tags: |
+              ghcr.io/${{ github.repository }}:jammy
+              ghcr.io/${{ github.repository }}:jammy-py310
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-jammy
+              ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-jammy-py310
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          build-args: |
+            APP_VERSION=${{ needs.setup.outputs.release-tag }}
+            BUILDER_VERSION=${{ matrix.image.builder_name }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          tags: ${{ matrix.image.tags }}
+
+      - name: Write to summary
+        env:
+          TAGS: ${{ matrix.image.tags }}
+        run: |
+          TAG="$(echo "$TAGS" | head -n1)"
+
+          echo "### Image pushed :ship:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "$TAG for ${{ matrix.image.builder_name }}" >> $GITHUB_STEP_SUMMARY

@@ -3,7 +3,7 @@
 #
 name: Publish
 
-run-name: "Publish: ${{ inputs.version }}: ${{ github.ref_name }}@${{ github.sha }}"
+run-name: "${{ inputs.version }}: ${{ github.ref_name }}@${{ github.sha }}"
 
 on:
   workflow_dispatch:
