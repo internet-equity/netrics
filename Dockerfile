@@ -69,6 +69,18 @@ export DEBIAN_FRONTEND=noninteractive
 
 set -euo pipefail
 
+#
+# cache of /var/lib/apt -- though populated in *this* build by builder's ONBUILD instructions --
+# may not function correctly and we must assume that it *may* be empty.
+#
+# as such, we'll use this cache -- hoping that, when it's used, it'll speed up operations, at
+# the same time as it keeps these files *out* of the image itself -- but we'll *ensure* that
+# the directory is populated (by "update") *here*
+#
+apt update
+
+# (the speedtest-cli script runs "update" ... but not *consistently* prior to some of its
+# "install" commands)
 curl --silent https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
 
 apt install --yes --no-install-recommends \
