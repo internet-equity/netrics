@@ -24,7 +24,7 @@ Features:
 * Configuration for Humans: in either YAML or TOML formats
 * Measurements built in: Provide your own measurements or hit the ground running with built-in, pre-configured measurements from Ookla, Measurement Lab, iPerf, and more
 * Open, operating system-level interfaces: measurements are implemented as arbitrary executables reading structured standard input parameters, writing structured standard output results, _etc_.
-* Diverse installation targets: support for _*nix_ devices featuring Python version 3.8 or later, via pip or via all-in-one pre-built bundles
+* Diverse installation targets: native support for _*nix_ devices featuring Python version 3.8 or later, via pip or via all-in-one pre-built bundles – and, Docker images, too!
 * Debugging tools: command-line utilities to test and debug measurement executables – on your laptop or on your Raspberry Pi
 * Python SDK: simple tools to help in the implementation of measurements in Python (and serving as prototypes for their implementation in other languages)
 
@@ -35,12 +35,22 @@ Not interested in network measurements?
 Netrics is itself a distribution of https://github.com/chicago-cdac/fate[Fate], a general-purpose, feature-rich scheduler for periodic tasks.
 ====
 
+== Demo
+
+Not quite ready to dive in? Check out our https://github.com/internet-equity/netrics-docker[guide in the netrics-demo repository].
+
 == Installation
 
-[TIP]
-====
-You can install and demo Netrics software with Docker. Follow our https://github.com/internet-equity/netrics-docker/tree/main[guide on the netrics-docker GitHub repository] to get started.
-====
+=== Docker images
+
+Netrics publishes a number of https://github.com/internet-equity/netrics/pkgs/container/netrics[Debian-based Docker images], for the ease of users familiar with Docker, to support otherwise unsupported systems, and otherwise to provision Netrics in systems utilizing containers.
+
+For example, to get started with the default Netrics Docker image:
+
+[source,sh]
+----
+docker run ghcr.io/internet-equity/netrics
+----
 
 === Package managers
 
@@ -224,7 +234,7 @@ The report printed by the above should include the line: `Status: OK (Exit code 
 
 == Initialization
 
-Outside of <<package-managers,installation by a package manager>> or by <<One-line installer,the one-line installer>>, initialization is suggested to set up your Netrics installation.
+Outside of <<docker-images,the Docker container>>, and <<package-managers,installation by a package manager>> or by <<One-line installer,the one-line installer>>, initialization is suggested to set up your Netrics installation.
 
 <<Pre-built bundle>>, <<PyPI>> and <<source,source>> distributions feature the `netrics` sub-command `init`:
 
