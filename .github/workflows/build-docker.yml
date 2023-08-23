@@ -93,6 +93,9 @@ jobs:
               ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-jammy-py310
 
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -106,12 +109,14 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          push: true
           build-args: |
             APP_VERSION=${{ needs.setup.outputs.release-tag }}
             BUILDER_VERSION=${{ matrix.image.builder_name }}
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           tags: ${{ matrix.image.tags }}
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          push: true
 
       - name: Write to summary
         env:
