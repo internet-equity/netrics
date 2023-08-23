@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         image:
-          - builder_name: 0.0.1-bookworm-py311
+          - builder_name: 0.0.2-bookworm-py311
             tags: |
               ghcr.io/${{ github.repository }}:latest
               ghcr.io/${{ github.repository }}:bookworm
@@ -74,7 +74,7 @@ jobs:
               ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-py311
               ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-bookworm-py311
 
-          - builder_name: 0.0.1-slim-py311
+          - builder_name: 0.0.2-slim-py311
             tags: |
               ghcr.io/${{ github.repository }}:slim
               ghcr.io/${{ github.repository }}:slim-bookworm
@@ -85,7 +85,7 @@ jobs:
               ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-slim-py311
               ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.release-tag }}-slim-bookworm-py311
 
-          - builder_name: 0.0.1-jammy-py310
+          - builder_name: 0.0.2-jammy-py310
             tags: |
               ghcr.io/${{ github.repository }}:jammy
               ghcr.io/${{ github.repository }}:jammy-py310
