@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import netifaces
 from descriptors import classonlymethod
-from schema import Optional
+from schema import Optional, Or
 
 from netrics import task
 
@@ -16,6 +16,13 @@ from .common import require_exec, require_lan
 
 PARAMS = task.schema.extend('connected_devices_arp', {
     Optional('iface', default='eth0'): task.schema.Text,
+
+    # timeout: seconds after which nmap is killed
+    # (0, None, False, etc. to disable timeout)
+    Optional('timeout', default=45): Or(task.schema.GTZero(),
+                                        task.schema.falsey,
+                                        error='timeout: seconds greater than zero or '
+                                              'falsey to disable'),
 })
 
 
@@ -31,6 +38,10 @@ def main(nmap, arp, params):
     nmap and arp are then executed to detect devices connected to the
     local network. The network interface to query may be configured
     (`iface`).
+
+    Should nmap not return within `timeout` seconds, an error
+    is returned. (This may be disabled by setting a "falsey" timeout
+    value.)
 
     Devices are recorded by MAC address, their most recent timestamp of
     detection persisted to task state.
@@ -73,11 +84,22 @@ def main(nmap, arp, params):
                 '-sn',  # no port scan
                 subnet,
             ),
+            timeout=(params.timeout or None),
             # note: we don't actually want output -- unless there's an error
             capture_output=True,
             check=True,
             text=True,
         )
+    except subprocess.TimeoutExpired as exc:
+        # nmap took longer than it should / than is allowed
+        task.log.critical(
+            cmd=exc.cmd,
+            elapsed=exc.timeout,
+            stdout=exc.stdout,
+            stderr=exc.stderr,
+            status='timeout',
+        )
+        return task.status.timeout
     except subprocess.CalledProcessError as exc:
         # nmap shouldn't really error this way: this is serious
         task.log.critical(
