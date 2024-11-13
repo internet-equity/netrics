@@ -543,7 +543,7 @@ a|```json
 
 === Novel measurements
 
-The Netrics framework invokes executables available to the operating system. As such, built-in measurements enjoy next-to-nil privilege relative to any other installed executable; and, measurements abiding by the framework's expectations may be added with a minimum of effort.
+The Netrics framework invokes executables available through the operating system. As such, built-in measurements enjoy next-to-nil privilege relative to any other installed executable. Measurements abiding by the framework's expectations may be scheduled with a minimum of effort, provided that they follow the contract below.
 
 ==== The contract
 
@@ -687,7 +687,7 @@ Any other discovered executable, such as `netrics-cowsay`{empty}footnote:[There 
 
 ==== Testing
 
-==== execute
+===== execute
 
 Any executable may be invoked (with optional arguments) by the Netrics `execute` command:
 
@@ -700,7 +700,7 @@ The above generates an execution report for use in development and debugging.
 
 Options such as `-i|--stdin` may be useful to supply measurment parameters to the executable according to the <<the-contract,framework's contract>>.
 
-==== run
+===== run
 
 Once added to Netrics configuration, executables become _tasks_, (also known as _measurements_ or _modules_). These may be invoked ad-hoc by the `run` command:
 
@@ -714,6 +714,17 @@ The options and output of the `run` command are similar to those of `execute`.
 Unlike with scheduled tasks, the results of tasks performed by `run` are not, by default, persisted to file. Either specify option `--record` to capture these as configured, or option `--stdout` to capture these at an arbitrary path.
 
 === Adding builtins
+
+[IMPORTANT]
+====
+Note that this – and further sections – are _not_ necessary to deploy your own Netrics measurements.
+
+Builtins are distributed with _all_ installations for _all_ users of Netrics: to demonstrate intended functionality, to document _one_ manner of designing robust measurements, and as a common core of network measurements.
+
+If you believe your measurement should be included in this manner and for these reasons, read on.
+
+If you merely want to add your measurement to your own deployments, consult <<Novel measurements>> and <<Configuration>>.
+====
 
 Having <<testing,tested your novel measurement>>, it might be added to the Netrics framework for availability across _all_ installations of this software via https://github.com/chicago-cdac/netrics/pulls[pull request].
 
@@ -741,6 +752,11 @@ netrics-MOD = "netrics.measurement.MOD:main"
 1. Add your command to this document's table of <<built-in-measurements,built-in measurements>>.
 
 === Extending the framework
+
+[IMPORTANT]
+====
+Note that these steps are not necessary to the development of <<Novel measurements>>.
+====
 
 ==== Set-up
 
