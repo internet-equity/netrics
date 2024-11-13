@@ -30,12 +30,10 @@ on:
 
 jobs:
   delegate:
-    uses: internet-equity/fate/.github/workflows/publish.yml@1fa15f362fb18fe4636d57788755a60f6713aa61
+    uses: internet-equity/fate/.github/workflows/publish.yml@1.0.0
     permissions:
       contents: write
-    secrets:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
+      id-token: write
     with:
       version: ${{ inputs.version }}
       force-version: ${{ inputs.force-version }}

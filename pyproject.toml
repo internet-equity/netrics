@@ -8,10 +8,11 @@ authors = [
   "Kyle MacMillan <macmillan@uchicago.edu>",
 ]
 packages = [{include = "netrics", from = "src"}]
+readme = "readme.adoc"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fate-scheduler = "0.1.0"
+fate-scheduler = "1.0.0"
 netifaces = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
