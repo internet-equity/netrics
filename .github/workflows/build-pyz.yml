@@ -1,6 +1,6 @@
 name: Build PYZ distribution
 
-run-name: ${{ github.event.release.tag_name || github.event.workflow_run.display_title }}
+run-name: ${{ github.event.release.tag_name || inputs.head-sha || github.event.workflow_run.display_title }}
 
 on:
   release:
@@ -52,6 +52,7 @@ jobs:
           # and its subsequent tag commit (but without fetching *everything*)
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 100
+          fetch-tags: true
 
       - name: Determine HEAD
         id: head
