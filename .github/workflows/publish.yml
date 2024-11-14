@@ -16,7 +16,7 @@ on:
         type: boolean
         required: false
       draft:
-        description: draft but do not publish release (dependent jobs will fail)
+        description: draft but do not publish release (dependent jobs may fail)
         type: boolean
         required: false
       prerelease:
@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           #
           # Fetch ALL history s.t. tags may be sorted by date (creatordate)
@@ -195,7 +195,7 @@ jobs:
           fi
 
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install management dependencies
         run: pip install poetry

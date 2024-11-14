@@ -7,6 +7,8 @@ on:
     types:
       - published
 
+  # release published by workflow does not trigger above event;
+  # rather, we're triggered by this below
   workflow_run:
     workflows:
       - publish
@@ -27,36 +29,43 @@ jobs:
 
     outputs:
       release-sha: ${{ steps.head.outputs.release-sha }}
-      can-build: ${{ steps.success.outputs.can-build }}
+      can-build: ${{ steps.upstream.outputs.can-build }}
 
     steps:
-      - name: Check success
-        id: success
+      - name: Check upstream success
+        id: upstream
         env:
-          CONCLUSION: ${{ github.event.workflow_run && github.event.workflow_run.conclusion || 'success' }}
+          CONCLUSION: ${{ github.event.workflow_run && github.event.workflow_run.conclusion || 'na' }}
         run: |
-          if [ "$CONCLUSION" = success ]
-          then
-            echo "publish successful"
-            echo "can-build=true" >> $GITHUB_OUTPUT
-          else
-            echo "::error::publish not successful"
-            echo "can-build=false" >> $GITHUB_OUTPUT
-          fi
+          case "$CONCLUSION" in
+            success)
+              echo "upstream publish successful"
+              echo "can-build=true" >> $GITHUB_OUTPUT
+              ;;
+            na)
+              echo "no upstream workflow"
+              echo "can-build=true" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "::notice::upstream publish unsuccessful"
+              echo "can-build=false" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
       - name: Check out repository
-        uses: actions/checkout@v3
-        if: fromJSON(steps.success.outputs.can-build)
+        uses: actions/checkout@v4
+        if: fromJSON(steps.upstream.outputs.can-build)
         with:
           # fetch enough that we should feasibly be able to find this changeset
           # and its subsequent tag commit (but without fetching *everything*)
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 100
+          # fetch tags s.t. we can interpret ref inputs on dispatch
           fetch-tags: true
 
       - name: Determine HEAD
         id: head
-        if: fromJSON(steps.success.outputs.can-build)
+        if: fromJSON(steps.upstream.outputs.can-build)
         env:
           HEAD_REF: ${{ inputs.head-ref }}
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
@@ -92,7 +101,7 @@ jobs:
 
   delegate:
     needs: [setup]
-    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.7
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.8
     if: fromJSON(needs.setup.outputs.can-build)
     permissions:
       contents: write
