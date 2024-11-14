@@ -1,6 +1,6 @@
 name: Build PYZ distribution
 
-run-name: ${{ github.event.release.tag_name || inputs.head-sha || github.event.workflow_run.display_title }}
+run-name: ${{ github.event.release.tag_name || inputs.head-ref || github.event.workflow_run.display_title }}
 
 on:
   release:
@@ -15,7 +15,7 @@ on:
 
   workflow_dispatch:
     inputs:
-      head-sha:
+      head-ref:
         default: ""
         required: false
         type: string
@@ -58,16 +58,21 @@ jobs:
         id: head
         if: fromJSON(steps.success.outputs.can-build)
         env:
-          HEAD_SHA: ${{ inputs.head-sha }}
+          HEAD_REF: ${{ inputs.head-ref }}
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          TARGET_SHA=${HEAD_SHA:-$RUN_SHA}
+          if [ -n "$HEAD_REF" ]
+          then
+            TARGET_REF="${HEAD_REF}^"
+          else
+            TARGET_REF="$RUN_SHA"
+          fi
 
-          HEAD="$(git log --format=%H ${TARGET_SHA}.. | tail -n 1)"
+          HEAD="$(git log --format=%H ${TARGET_REF}.. | tail -n 1)"
 
           if [ -z "$HEAD" ]
           then
-            echo "::error::could not find publish workflow changeset following ${TARGET_SHA:0:9}"
+            echo "::error::could not find publish workflow changeset following ${TARGET_REF:0:9}"
             exit 1
           fi
 
@@ -77,7 +82,7 @@ jobs:
 
           if [ -z "$TAGS" ]
           then
-            echo "::error::changeset following ${TARGET_SHA:0:9} does not appear to be tagged release: ${HEAD:0:9}"
+            echo "::error::changeset following ${TARGET_REF:0:9} does not appear to be tagged release: ${HEAD:0:9}"
             exit 1
           fi
 
