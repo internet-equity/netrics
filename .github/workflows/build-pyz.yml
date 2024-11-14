@@ -73,7 +73,7 @@ jobs:
 
   delegate:
     needs: [setup]
-    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.6
+    uses: internet-equity/fate-pyz/.github/workflows/build-pyz.yml@0.6.7
     permissions:
       contents: write
     with:
