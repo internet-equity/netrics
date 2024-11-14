@@ -28,16 +28,252 @@ on:
         type: boolean
         required: false
 
+#
+# FIXME: the below should be used to delegate to the identical fate workflow
+#
+# FIXME: however, PyPI doesn't yet support delegated workflows for Trusted Publishing
+#
+# FIXME:     https://github.com/pypi/warehouse/issues/11096
+#
+# FIXME: with pypi/warehouse#11096 resolved, this workflow can revert to just the below
+#
+# jobs:
+#   delegate:
+#     uses: internet-equity/fate/.github/workflows/publish.yml@1.0.0
+#     permissions:
+#       contents: write
+#       id-token: write
+#     with:
+#       version: ${{ inputs.version }}
+#       force-version: ${{ inputs.force-version }}
+#       force-pass: true
+#       draft: ${{ inputs.draft }}
+#       prerelease: ${{ inputs.prerelease }}
+#       pypi-test: ${{ inputs.pypi-test }}
+#
+
+env:
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+  GH_TOKEN: ${{ github.token }}
+  TEST_PYPI: https://test.pypi.org/legacy/
+
 jobs:
-  delegate:
-    uses: internet-equity/fate/.github/workflows/publish.yml@1.0.0
+  check:
+    runs-on: ubuntu-latest
+
+    outputs:
+      git-tags: ${{ steps.tags.outputs.git-tags }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          #
+          # Fetch ALL history s.t. tags may be sorted by date (creatordate)
+          # (regardless of whether the tag or ls-remote --tags command is used)
+          #
+          # Note: This might be slow! ls-remote allows us to avoid this, *except*
+          # that we want to sort by object creation date, which appears to require
+          # a complete local clone.
+          #
+          fetch-depth: 0
+
+      - name: Retrieve tags
+        id: tags
+        #
+        # checkout does not by default load all changesets and tags
+        #
+        # as such, this can come up empty:
+        #
+        #   git tag --list
+        #
+        # instead, (and rather than check out repo history), we can query the remote:
+        #
+        #   git ls-remote -q --tags --refs --sort=-creatordate | awk -F / '{print $3}'
+        #
+        # *However* the "creatordate" sort above fails without a deep clone;
+        # so, we'll rely on a deep clone, regardless.
+        #
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+
+          echo "git-tags<<$EOF" >> "$GITHUB_OUTPUT"
+
+          git tag --list --sort=-creatordate >> "$GITHUB_OUTPUT"
+
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Check that tag is novel
+        env:
+          TAGS: ${{ steps.tags.outputs.git-tags }}
+        run: |
+          echo "$TAGS" |
+            grep -E "^${{ inputs.version }}$" > /dev/null && {
+              echo "::error::Tag ${{ inputs.version }} already exists"
+              exit 1
+            }
+
+          echo "✓ Tag ${{ inputs.version }} is novel"
+
+      - name: Check that version is semantic
+        if: ${{ ! inputs.force-version }}
+        env:
+          SEMVAR_PATTERN: ^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
+        shell: python
+        run: |
+          import os
+          import re
+
+          match = re.fullmatch(os.getenv('SEMVAR_PATTERN'), '${{ inputs.version }}')
+
+          if not match:
+              print("::error::Version ${{ inputs.version }} is non-semantic")
+              raise SystemExit(1)
+
+          items = ('='.join(item) for item in match.groupdict().items() if all(item))
+
+          print("✓ Version ${{ inputs.version }} is semantic:", *items)
+
+      - name: Check for passing tests
+        # if: ${{ ! inputs.force-pass }}
+        if: false
+        run: |
+          successSha=$(
+            gh run list -w test -b ${{ github.ref_name }} -L 1 --json headSha,status -q '
+              .[]
+              | select(.status == "completed")
+              | .headSha
+            '
+          )
+
+          if [ "$successSha" != ${{ github.sha }} ]
+          then
+            echo "::error::No successful test job for ${{ github.sha }}"
+            exit 1
+          else
+            echo "✓ Test job succeeded for $successSha"
+            exit 0
+          fi
+
+  publish:
+    runs-on: ubuntu-latest
+
+    needs: [check]
+
     permissions:
       contents: write
       id-token: write
-    with:
-      version: ${{ inputs.version }}
-      force-version: ${{ inputs.force-version }}
-      force-pass: true
-      draft: ${{ inputs.draft }}
-      prerelease: ${{ inputs.prerelease }}
-      pypi-test: ${{ inputs.pypi-test }}
+
+    steps:
+      - name: Configure publishing changeset author
+        env:
+          SENDER: ${{ github.event.sender.login }}
+        run: |
+          USER="$(
+            gh api users/"$SENDER"
+          )"
+
+          NAME="$(echo "$USER" | jq -r .name)"
+
+          if [ -n "$NAME" ]
+          then
+            echo "GIT_AUTHOR_NAME=$NAME" >> $GITHUB_ENV
+          else
+            echo "::error::Author name empty for sender $SENDER"
+            exit 1
+          fi
+
+          EMAIL="$(echo "$USER" | jq -r .email)"
+
+          if [ -n "$EMAIL" ]
+          then
+            echo "GIT_AUTHOR_EMAIL=$EMAIL" >> $GITHUB_ENV
+          else
+            echo "::error::Author email empty for sender $SENDER"
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install management dependencies
+        run: pip install poetry
+
+      - name: Set library version
+        run: poetry version "${{ inputs.version }}"
+
+      - name: Build
+        run: poetry build
+
+      - name: Publish to PyPI
+        if: ${{ ! inputs.pypi-test }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Publish to Test PyPI
+        if: inputs.pypi-test
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: ${{ env.TEST_PYPI }}
+
+      - name: Annotate publishing
+        run: |
+          LIB_SIG="$(poetry version)"
+
+          LIB_NAME="$(echo "$LIB_SIG" | awk '{print $1}')"
+          LIB_VER="$(echo "$LIB_SIG" | awk '{print $2}')"
+
+          if [ "${{ inputs.pypi-test }}" = true ]
+          then
+            PYPI_DOMAIN=test.pypi.org
+          else
+            PYPI_DOMAIN=pypi.org
+          fi
+
+          echo "### Library published :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Build uploaded to https://$PYPI_DOMAIN/project/$LIB_NAME/$LIB_VER/" >> $GITHUB_STEP_SUMMARY
+
+      - name: Commit and push
+        env:
+          TAGS: ${{ needs.check.outputs.git-tags }}
+        run: |
+          lastTag="$(echo "$TAGS" | head -n1)"
+
+          git commit --all --message="bump version $lastTag → ${{ inputs.version }}"
+
+          git push
+
+          # write summary information
+          echo "### Version bumped :arrow_heading_up:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```console' >> $GITHUB_STEP_SUMMARY
+          git show --format=full --no-patch >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Create tagged release
+        run: |
+          if [ "${{ github.event.inputs.draft }}" = true ]
+          then
+            DRAFT=--draft
+          else
+            DRAFT=""
+          fi
+
+          if [ "${{ github.event.inputs.prerelease }}" = true ]
+          then
+            PRERELEASE=--prerelease
+          else
+            PRERELEASE=""
+          fi
+
+          TARGET=$(git show --format=%H --no-patch)
+
+          URL="$(
+            gh release create "${{ inputs.version }}" --target $TARGET --generate-notes $DRAFT $PRERELEASE
+          )"
+
+          # write summary information
+          echo "### Release created :octocat:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See $URL" >> $GITHUB_STEP_SUMMARY
