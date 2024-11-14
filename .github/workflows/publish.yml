@@ -16,7 +16,7 @@ on:
         type: boolean
         required: false
       draft:
-        description: draft but do not publish release
+        description: draft but do not publish release (dependent jobs will fail)
         type: boolean
         required: false
       prerelease:
